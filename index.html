@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GST Download Configuration</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      padding: 30px;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    textarea {
+      resize: none;
+      height: 100px;
+      background: #f9f9f9;
+    }
+    .checkbox-group {
+      margin-top: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .row {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .row > div {
+      flex: 1;
+      min-width: 200px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>GST Portal Download Details</h2>
+
+  <label for="gstid">GST ID</label>
+  <input type="text" id="gstid" placeholder="Enter GST ID" />
+
+  <label for="password">Password</label>
+  <input type="password" id="password" placeholder="Enter Password" />
+
+  <label for="path">Download Path</label>
+  <input type="text" id="path" placeholder="e.g. D:/GST/Downloads" />
+
+  <div class="row">
+    <div>
+      <label for="fy">Financial Year</label>
+      <select id="fy"></select>
+    </div>
+    <div>
+      <label for="month">Month</label>
+      <select id="month"></select>
+    </div>
+  </div>
+
+  <div class="checkbox-group">
+    <input type="checkbox" id="fullYear" />
+    <label for="fullYear" style="font-weight: normal;">Select Entire Financial Year</label>
+  </div>
+
+  <label for="selectedMonths">Selected Month(s)</label>
+  <textarea id="selectedMonths" readonly></textarea>
+</div>
+
+<script>
+  const fySelect = document.getElementById('fy');
+  const monthSelect = document.getElementById('month');
+  const fullYearCheckbox = document.getElementById('fullYear');
+  const selectedMonthsArea = document.getElementById('selectedMonths');
+
+  // Populate Financial Years from FY 2017-18 till current FY
+  const startFY = 2017;
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
+  const endFY = currentMonth >= 4 ? currentYear : currentYear - 1;
+
+  for (let y = startFY; y <= endFY; y++) {
+    const option = document.createElement('option');
+    option.value = `FY ${y}-${String(y + 1).slice(-2)}`;
+    option.textContent = `FY ${y}-${String(y + 1).slice(-2)}`;
+    fySelect.appendChild(option);
+  }
+
+  // Populate Months
+  const months = [
+    'April', 'May', 'June', 'July', 'August', 'September',
+    'October', 'November', 'December', 'January', 'February', 'March'
+  ];
+
+  months.forEach(month => {
+    const option = document.createElement('option');
+    option.value = month;
+    option.textContent = month;
+    monthSelect.appendChild(option);
+  });
+
+  // Handle Full Year Checkbox
+  fullYearCheckbox.addEventListener('change', () => {
+    if (fullYearCheckbox.checked) {
+      monthSelect.disabled = true;
+      selectedMonthsArea.value = `${fySelect.value} (Entire Financial Year Selected)`;
+    } else {
+      monthSelect.disabled = false;
+      selectedMonthsArea.value = '';
+    }
+  });
+
+  // Handle Month Selection
+  monthSelect.addEventListener('change', () => {
+    if (!fullYearCheckbox.checked) {
+      selectedMonthsArea.value = `${fySelect.value} - ${monthSelect.value}`;
+    }
+  });
+
+  // Update textarea when FY changes
+  fySelect.addEventListener('change', () => {
+    if (fullYearCheckbox.checked) {
+      selectedMonthsArea.value = `${fySelect.value} (Entire Financial Year Selected)`;
+    } else if (monthSelect.value) {
+      selectedMonthsArea.value = `${fySelect.value} - ${monthSelect.value}`;
+    }
+  });
+</script>
+
+</body>
+</html>
