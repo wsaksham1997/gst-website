@@ -89,6 +89,19 @@
 
   <label for="selectedMonths">Selected Month(s)</label>
   <textarea id="selectedMonths" readonly></textarea>
+  <button id="runBtn" style="
+  margin-top: 20px;
+  padding: 12px;
+  font-size: 16px;
+  background-color: #2d6cdf;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+">
+  Run GSTR-2B Automation
+</button>
+
 </div>
 
 <script>
@@ -178,7 +191,39 @@ document.getElementById("runBtn").addEventListener("click", function () {
     });
 });
 </script>
+<script>
+document.getElementById("runBtn").addEventListener("click", function () {
+
+  const payload = {
+    gstin: document.getElementById("gstid").value,
+    password: document.getElementById("password").value,
+    fy: document.getElementById("fy").value.replace("FY ", ""),
+    only_fy: document.getElementById("fullYear").checked,
+    month: document.getElementById("fullYear").checked ? "" : document.getElementById("month").value,
+    path: document.getElementById("path").value || "C:\\GST_DOWNLOADS",
+    client: "WebUser"
+  };
+
+  fetch("http://192.168.1.85:5000/run-gstr2b", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert("Automation started successfully.\nCheck backend machine.");
+  })
+  .catch(err => {
+    console.error(err);
+    alert("Failed to start automation. Check console.");
+  });
+
+});
+</script>
 
 
 </body>
 </html>
+
