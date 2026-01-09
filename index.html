@@ -151,5 +151,34 @@
   });
 </script>
 
+<script>
+document.getElementById("runBtn").addEventListener("click", function () {
+    const data = {
+        gstin: document.getElementById("gstin").value,
+        password: document.getElementById("password").value,
+        fy: document.getElementById("fy").value,
+        only_fy: document.getElementById("onlyFy").checked,
+        month: document.getElementById("month").value,
+        path: "C:\\GST_DOWNLOADS",
+        client: "WebUser"
+    };
+
+    fetch("http://192.168.1.85:5000/run-gstr2b", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(resp => {
+        alert("Automation started successfully");
+    })
+    .catch(err => {
+        alert("Error starting automation");
+        console.error(err);
+    });
+});
+</script>
+
+
 </body>
 </html>
