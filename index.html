@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GST Download Configuration</title>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -18,15 +19,9 @@
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-    h2 {
-      margin-bottom: 20px;
-      color: #333;
-    }
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: bold;
-    }
+    h2 { margin-bottom: 20px; color: #333; }
+    label { display: block; margin-top: 15px; font-weight: bold; }
+
     input, select, textarea {
       width: 100%;
       padding: 8px;
@@ -35,37 +30,61 @@
       border: 1px solid #ccc;
       font-size: 14px;
     }
+
     textarea {
       resize: none;
       height: 100px;
       background: #f9f9f9;
     }
+
     .checkbox-group {
       margin-top: 15px;
       display: flex;
       align-items: center;
       gap: 8px;
     }
+
     .row {
       display: flex;
       gap: 20px;
       flex-wrap: wrap;
     }
+
     .row > div {
       flex: 1;
       min-width: 200px;
     }
+
+    /* ===== Month Progress ===== */
+    #monthProgress {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .month-box {
+      padding: 10px;
+      text-align: center;
+      border-radius: 6px;
+      font-size: 13px;
+      background-color: #e0e0e0;
+      color: #333;
+    }
+
+    .month-running { background-color: #90caf9; }
+    .month-done { background-color: #81c784; color: #fff; }
+
+    /* ===== Modal ===== */
     .modal {
       display: none;
       position: fixed;
       z-index: 9999;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
       background-color: rgba(0,0,0,0.4);
     }
-    
+
     .modal-content {
       background-color: #fff;
       margin: 12% auto;
@@ -75,11 +94,7 @@
       text-align: center;
       box-shadow: 0 6px 18px rgba(0,0,0,0.2);
     }
-    
-    .modal-content h3 {
-      margin-bottom: 15px;
-    }
-    
+
     .modal-content button {
       margin-top: 20px;
       padding: 8px 16px;
@@ -89,120 +104,102 @@
       border-radius: 4px;
       cursor: pointer;
     }
-
   </style>
 </head>
+
 <body>
 
 <div class="container">
   <h2>GST Portal Download Details</h2>
 
-  <label for="gstid">GST ID</label>
-  <input type="text" id="gstid" placeholder="Enter GST ID" />
+  <label>GST ID</label>
+  <input type="text" id="gstid" />
 
-  <label for="password">Password</label>
-  <input type="password" id="password" placeholder="Enter Password" />
+  <label>Password</label>
+  <input type="password" id="password" />
 
-  <label for="path">Download Path</label>
-  <input type="text" id="path" placeholder="e.g. D:/GST/Downloads" />
+  <label>Download Path</label>
+  <input type="text" id="path" />
 
   <div class="row">
     <div>
-      <label for="fy">Financial Year</label>
+      <label>Financial Year</label>
       <select id="fy"></select>
     </div>
     <div>
-      <label for="month">Month</label>
+      <label>Month</label>
       <select id="month"></select>
     </div>
   </div>
 
   <div class="checkbox-group">
     <input type="checkbox" id="fullYear" />
-    <label for="fullYear" style="font-weight: normal;">Select Entire Financial Year</label>
+    <label>Select Entire Financial Year</label>
   </div>
 
-  <label for="selectedMonths">Selected Month(s)</label>
+  <label>Selected Month(s)</label>
   <textarea id="selectedMonths" readonly></textarea>
-  <button id="runBtn" style="
-  margin-top: 20px;
-  padding: 12px;
-  font-size: 16px;
-  background-color: #2d6cdf;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-">
-  Run GSTR-2B Automation
-</button>
 
+  <label>Download Progress</label>
+  <div id="monthProgress"></div>
+
+  <button id="runBtn" style="margin-top:20px;padding:12px;font-size:16px;
+    background:#2d6cdf;color:white;border:none;border-radius:6px;">
+    Run GSTR-2B Automation
+  </button>
 </div>
 
+<!-- ===== Scripts ===== -->
+
 <script>
-  const fySelect = document.getElementById('fy');
-  const monthSelect = document.getElementById('month');
-  const fullYearCheckbox = document.getElementById('fullYear');
-  const selectedMonthsArea = document.getElementById('selectedMonths');
+const fySelect = document.getElementById("fy");
+const monthSelect = document.getElementById("month");
+const fullYear = document.getElementById("fullYear");
+const selectedMonths = document.getElementById("selectedMonths");
 
-  // Populate Financial Years from FY 2017-18 till current FY
-  const startFY = 2017;
-  const currentYear = new Date().getFullYear();
-  const currentMonth = new Date().getMonth() + 1;
-  const endFY = currentMonth >= 4 ? currentYear : currentYear - 1;
+const months = ["April","May","June","July","August","September",
+  "October","November","December","January","February","March"];
 
-  for (let y = startFY; y <= endFY; y++) {
-    const option = document.createElement('option');
-    option.value = `FY ${y}-${String(y + 1).slice(-2)}`;
-    option.textContent = `FY ${y}-${String(y + 1).slice(-2)}`;
-    fySelect.appendChild(option);
-  }
+const startFY = 2017;
+const today = new Date();
+const endFY = today.getMonth() >= 3 ? today.getFullYear() : today.getFullYear() - 1;
 
-  // Populate Months
-  const months = [
-    'April', 'May', 'June', 'July', 'August', 'September',
-    'October', 'November', 'December', 'January', 'February', 'March'
-  ];
+for (let y = startFY; y <= endFY; y++) {
+  const opt = document.createElement("option");
+  opt.value = `${y}-${String(y+1).slice(-2)}`;
+  opt.textContent = `FY ${y}-${String(y+1).slice(-2)}`;
+  fySelect.appendChild(opt);
+}
 
-  months.forEach(month => {
-    const option = document.createElement('option');
-    option.value = month;
-    option.textContent = month;
-    monthSelect.appendChild(option);
+months.forEach(m => {
+  const opt = document.createElement("option");
+  opt.value = m;
+  opt.textContent = m;
+  monthSelect.appendChild(opt);
+});
+
+fullYear.onchange = () => {
+  monthSelect.disabled = fullYear.checked;
+};
+
+function renderMonthProgress(onlyFY, month) {
+  const box = document.getElementById("monthProgress");
+  box.innerHTML = "";
+  const list = onlyFY ? months : [month];
+  list.forEach(m => {
+    const div = document.createElement("div");
+    div.className = "month-box";
+    div.id = "month-" + m;
+    div.innerText = m;
+    box.appendChild(div);
   });
-
-  // Handle Full Year Checkbox
-  fullYearCheckbox.addEventListener('change', () => {
-    if (fullYearCheckbox.checked) {
-      monthSelect.disabled = true;
-      selectedMonthsArea.value = `${fySelect.value} (Entire Financial Year Selected)`;
-    } else {
-      monthSelect.disabled = false;
-      selectedMonthsArea.value = '';
-    }
-  });
-
-  // Handle Month Selection
-  monthSelect.addEventListener('change', () => {
-    if (!fullYearCheckbox.checked) {
-      selectedMonthsArea.value = `${fySelect.value} - ${monthSelect.value}`;
-    }
-  });
-
-  // Update textarea when FY changes
-  fySelect.addEventListener('change', () => {
-    if (fullYearCheckbox.checked) {
-      selectedMonthsArea.value = `${fySelect.value} (Entire Financial Year Selected)`;
-    } else if (monthSelect.value) {
-      selectedMonthsArea.value = `${fySelect.value} - ${monthSelect.value}`;
-    }
-  });
+}
 </script>
 
 <script>
-function showModal(title, message) {
+function showModal(title, msg) {
   document.getElementById("modalTitle").innerText = title;
-  document.getElementById("modalMessage").innerText = message;
+  document.getElementById("modalMessage").innerText = msg;
   document.getElementById("jobModal").style.display = "block";
 }
 
@@ -210,80 +207,52 @@ function closeModal() {
   document.getElementById("jobModal").style.display = "none";
 }
 
-document.getElementById("runBtn").addEventListener("click", function () {
+let jobInterval = null;
 
-  const payload = {
-    gstin: document.getElementById("gstid").value,
-    password: document.getElementById("password").value,
-    fy: document.getElementById("fy").value.replace("FY ", ""),
-    only_fy: document.getElementById("fullYear").checked,
-    month: document.getElementById("fullYear").checked
-      ? ""
-      : document.getElementById("month").value,
-    path: document.getElementById("path").value || "C:\\GST_DOWNLOADS",
-    client: "WebUser"
-  };
+function startJobStatusPolling(jobId) {
+  jobInterval = setInterval(() => {
+    fetch(`http://192.168.1.85:5000/job-status/${jobId}`)
+      .then(r => r.json())
+      .then(d => {
+        document.getElementById("modalMessage").innerText =
+          `Job ID:\n${jobId}\n\nStatus: ${d.status}`;
+        if (["COMPLETED","FAILED"].includes(d.status)) {
+          clearInterval(jobInterval);
+        }
+      });
+  }, 5000);
+}
+
+document.getElementById("runBtn").onclick = () => {
+  renderMonthProgress(fullYear.checked, monthSelect.value);
 
   fetch("http://192.168.1.85:5000/run-gstr2b", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(payload)
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({
+      gstin: gstid.value,
+      password: password.value,
+      fy: fy.value,
+      only_fy: fullYear.checked,
+      month: fullYear.checked ? "" : monthSelect.value,
+      path: path.value || "C:\\GST_DOWNLOADS"
+    })
   })
-  .then(res => res.json())
-  .then(data => {
-    if (data.job_id) {
-      showModal(
-        "GST Automation Started",
-        "Job ID:\n" + data.job_id + "\n\nStatus: RUNNING"
-      );
-      startJobStatusPolling(data.job_id);
-    } else {
-      showModal("Error", "Job ID not received from server");
-    }
-  })
-  .catch(err => {
-    console.error(err);
-    showModal("Error", "Failed to start automation");
+  .then(r => r.json())
+  .then(d => {
+    showModal("GST Automation Started", "Job ID:\n" + d.job_id);
+    startJobStatusPolling(d.job_id);
   });
-
-});
+};
 </script>
 
-<script>
-let jobStatusInterval = null;
-
-function startJobStatusPolling(jobId) {
-  jobStatusInterval = setInterval(() => {
-    fetch(`http://192.168.1.85:5000/job-status/${jobId}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.status) {
-          document.getElementById("modalMessage").innerText =
-            "Job ID:\n" + jobId + "\n\nStatus: " + data.status;
-        }
-
-        if (data.status === "COMPLETED" || data.status === "FAILED") {
-          clearInterval(jobStatusInterval);
-        }
-      })
-      .catch(err => {
-        console.error("Status check failed", err);
-      });
-  }, 5000); // every 5 seconds
-}
-</script>
-
-<!-- Job Status Modal -->
 <div id="jobModal" class="modal">
   <div class="modal-content">
-    <h3 id="modalTitle">GST Automation</h3>
-    <p id="modalMessage">Starting...</p>
+    <h3 id="modalTitle"></h3>
+    <p id="modalMessage"></p>
     <button onclick="closeModal()">Close</button>
   </div>
 </div>
 
 </body>
 </html>
-
