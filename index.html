@@ -147,17 +147,6 @@
     background:#2d6cdf;color:white;border:none;border-radius:6px;">
     Run GSTR-2B Automation
   </button>
-  <button id="downloadBtn"
-    style="margin-top:15px;
-           padding:12px;
-           font-size:16px;
-           background:#2e7d32;
-           color:white;
-           border:none;
-           border-radius:6px;
-           display:none;">
-    Download ZIP
-  </button>
 </div>
 
 <!-- ===== Scripts ===== -->
@@ -251,12 +240,37 @@ function startJobStatusPolling(jobId) {
         if (d.status === "COMPLETED") {
           clearInterval(jobInterval);
           document.getElementById("runBtn").disabled = false;
-          
+        
+          let failedMonths = [];
+        
+          if (d.months) {
+            Object.entries(d.months).forEach(([m, s]) => {
+              if (s !== "COMPLETED") {
+                failedMonths.push(m);
+              }
+            });
+          }
+        
+          let message = `Job ID: ${jobId}\n\nStatus: COMPLETED\n\n`;
+        
+          if (failedMonths.length === 0) {
+            message += "✅ All selected months downloaded successfully.";
+          } else {
+            message += "⚠️ The following months failed:\n";
+            failedMonths.forEach(m => {
+              message += `• ${m}\n`;
+            });
+          }
+        
+          document.getElementById("modalTitle").innerText = "GST Automation Result";
+          document.getElementById("modalMessage").innerText = message;
+        
           if (d.zip_path) {
             window.latestZipPath = d.zip_path;
-            document.getElementById("downloadBtn").style.display = "block";
+            document.getElementById("modalDownloadBtn").style.display = "inline-block";
           }
         }
+
         
         if (d.status === "FAILED") {
           clearInterval(jobInterval);
@@ -312,18 +326,41 @@ document.getElementById("downloadBtn").onclick = () => {
   window.location.href =
     `http://192.168.1.85:5000/download?path=${encodeURIComponent(window.latestZipPath)}`;
 };
+document.getElementById("modalDownloadBtn").onclick = () => {
+  if (!window.latestZipPath) {
+    alert("ZIP not available");
+    return;
+  }
+
+  window.location.href =
+    `http://192.168.1.85:5000/download?path=${encodeURIComponent(window.latestZipPath)}`;
+};
 </script>
 
 <div id="jobModal" class="modal">
   <div class="modal-content">
     <h3 id="modalTitle"></h3>
-    <p id="modalMessage"></p>
-    <button onclick="closeModal()">Close</button>
+    <pre id="modalMessage" style="text-align:left;"></pre>
+  
+    <button id="modalDownloadBtn"
+            style="display:none;margin-top:12px;
+                   padding:10px 16px;
+                   background:#2e7d32;
+                   color:white;
+                   border:none;
+                   border-radius:5px;">
+      Download ZIP
+    </button>
+  
+    <button onclick="closeModal()" style="margin-left:10px;">
+      Close
+    </button>
   </div>
 </div>
 
 </body>
 </html>
+
 
 
 
