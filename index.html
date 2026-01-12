@@ -89,15 +89,6 @@
       border-radius: 4px;
       cursor: pointer;
     }
-    function showModal(title, message) {
-      document.getElementById("modalTitle").innerText = title;
-      document.getElementById("modalMessage").innerText = message;
-      document.getElementById("jobModal").style.display = "block";
-    }
-    
-    function closeModal() {
-      document.getElementById("jobModal").style.display = "none";
-    }
 
   </style>
 </head>
@@ -209,33 +200,16 @@
 </script>
 
 <script>
-document.getElementById("runBtn").addEventListener("click", function () {
-    const data = {
-        gstin: document.getElementById("gstin").value,
-        password: document.getElementById("password").value,
-        fy: document.getElementById("fy").value,
-        only_fy: document.getElementById("onlyFy").checked,
-        month: document.getElementById("month").value,
-        path: "C:\\GST_DOWNLOADS",
-        client: "WebUser"
-    };
+function showModal(title, message) {
+  document.getElementById("modalTitle").innerText = title;
+  document.getElementById("modalMessage").innerText = message;
+  document.getElementById("jobModal").style.display = "block";
+}
 
-    fetch("http://192.168.1.85:5000/run-gstr2b", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-    })
-    .then(res => res.json())
-    .then(resp => {
-        alert("Automation started successfully");
-    })
-    .catch(err => {
-        alert("Error starting automation");
-        console.error(err);
-    });
-});
-</script>
-<script>
+function closeModal() {
+  document.getElementById("jobModal").style.display = "none";
+}
+
 document.getElementById("runBtn").addEventListener("click", function () {
 
   const payload = {
@@ -243,7 +217,9 @@ document.getElementById("runBtn").addEventListener("click", function () {
     password: document.getElementById("password").value,
     fy: document.getElementById("fy").value.replace("FY ", ""),
     only_fy: document.getElementById("fullYear").checked,
-    month: document.getElementById("fullYear").checked ? "" : document.getElementById("month").value,
+    month: document.getElementById("fullYear").checked
+      ? ""
+      : document.getElementById("month").value,
     path: document.getElementById("path").value || "C:\\GST_DOWNLOADS",
     client: "WebUser"
   };
@@ -257,15 +233,23 @@ document.getElementById("runBtn").addEventListener("click", function () {
   })
   .then(res => res.json())
   .then(data => {
-    alert("Automation started successfully.\nCheck backend machine.");
+    if (data.job_id) {
+      showModal(
+        "GST Automation Started",
+        "Job ID:\n" + data.job_id
+      );
+    } else {
+      showModal("Error", "Job ID not received from server");
+    }
   })
   .catch(err => {
     console.error(err);
-    alert("Failed to start automation. Check console.");
+    showModal("Error", "Failed to start automation");
   });
 
 });
 </script>
+
 <!-- Job Status Modal -->
 <div id="jobModal" class="modal">
   <div class="modal-content">
@@ -277,6 +261,3 @@ document.getElementById("runBtn").addEventListener("click", function () {
 
 </body>
 </html>
-
-
-
