@@ -236,8 +236,9 @@ document.getElementById("runBtn").addEventListener("click", function () {
     if (data.job_id) {
       showModal(
         "GST Automation Started",
-        "Job ID:\n" + data.job_id
+        "Job ID:\n" + data.job_id + "\n\nStatus: RUNNING"
       );
+      startJobStatusPolling(data.job_id);
     } else {
       showModal("Error", "Job ID not received from server");
     }
@@ -248,6 +249,30 @@ document.getElementById("runBtn").addEventListener("click", function () {
   });
 
 });
+</script>
+
+<script>
+let jobStatusInterval = null;
+
+function startJobStatusPolling(jobId) {
+  jobStatusInterval = setInterval(() => {
+    fetch(`http://192.168.1.85:5000/job-status/${jobId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.status) {
+          document.getElementById("modalMessage").innerText =
+            "Job ID:\n" + jobId + "\n\nStatus: " + data.status;
+        }
+
+        if (data.status === "COMPLETED" || data.status === "FAILED") {
+          clearInterval(jobStatusInterval);
+        }
+      })
+      .catch(err => {
+        console.error("Status check failed", err);
+      });
+  }, 5000); // every 5 seconds
+}
 </script>
 
 <!-- Job Status Modal -->
@@ -261,3 +286,4 @@ document.getElementById("runBtn").addEventListener("click", function () {
 
 </body>
 </html>
+
