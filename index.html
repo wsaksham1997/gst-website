@@ -240,6 +240,8 @@ function startJobStatusPolling(jobId) {
         if (d.status === "COMPLETED") {
           clearInterval(jobInterval);
           document.getElementById("runBtn").disabled = false;
+          
+          document.getElementById("jobModal").style.display = "block";
         
           let failedMonths = [];
         
@@ -316,27 +318,6 @@ document.getElementById("runBtn").onclick = () => {
   });
 };
 </script>
-<script>
-document.getElementById("downloadBtn").onclick = () => {
-  if (!window.latestZipPath) {
-    alert("ZIP not ready yet");
-    return;
-  }
-
-  window.location.href =
-    `http://192.168.1.85:5000/download?path=${encodeURIComponent(window.latestZipPath)}`;
-};
-document.getElementById("modalDownloadBtn").onclick = () => {
-  if (!window.latestZipPath) {
-    alert("ZIP not available");
-    return;
-  }
-
-  window.location.href =
-    `http://192.168.1.85:5000/download?path=${encodeURIComponent(window.latestZipPath)}`;
-};
-</script>
-
 <div id="jobModal" class="modal">
   <div class="modal-content">
     <h3 id="modalTitle"></h3>
@@ -357,10 +338,16 @@ document.getElementById("modalDownloadBtn").onclick = () => {
     </button>
   </div>
 </div>
+<script>
+document.getElementById("modalDownloadBtn").onclick = () => {
+  if (!window.latestZipPath) {
+    alert("ZIP not available");
+    return;
+  }
 
+  window.location.href =
+    `http://192.168.1.85:5000/download?path=${encodeURIComponent(window.latestZipPath)}`;
+};
+</script>
 </body>
 </html>
-
-
-
-
