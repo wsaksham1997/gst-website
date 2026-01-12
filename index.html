@@ -153,6 +153,10 @@
 
 <script>
 const fySelect = document.getElementById("fy");
+const gstid = document.getElementById("gstid");
+const password = document.getElementById("password");
+const path = document.getElementById("path");
+const fy = document.getElementById("fy");
 const monthSelect = document.getElementById("month");
 const fullYear = document.getElementById("fullYear");
 const selectedMonths = document.getElementById("selectedMonths");
@@ -230,17 +234,26 @@ document.getElementById("runBtn").onclick = () => {
     method: "POST",
     headers: {"Content-Type":"application/json"},
     body: JSON.stringify({
-      gstin: gstid.value,
+      gstin: gstid.value.trim(),
       password: password.value,
       fy: fy.value,
       only_fy: fullYear.checked,
       month: fullYear.checked ? "" : monthSelect.value,
-      path: path.value || "C:\\GST_DOWNLOADS"
+      path: path.value || "C:\\GST_DOWNLOADS",
+      client: "DEFAULT_CLIENT"
     })
   })
-  .then(r => r.json())
   .then(d => {
-    showModal("GST Automation Started", "Job ID:\n" + d.job_id);
+    if (!d || !d.job_id) {
+      showModal("Error", d.error || "Failed to start automation");
+      return;
+    }
+  
+    showModal(
+      "GST Automation Started",
+      "Job ID:\n" + d.job_id + "\n\nStatus: RUNNING"
+    );
+  
     startJobStatusPolling(d.job_id);
   });
 };
@@ -256,3 +269,4 @@ document.getElementById("runBtn").onclick = () => {
 
 </body>
 </html>
+
