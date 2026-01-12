@@ -220,6 +220,23 @@ function startJobStatusPolling(jobId) {
       .then(d => {
         document.getElementById("modalMessage").innerText =
           `Job ID:\n${jobId}\n\nStatus: ${d.status}`;
+        
+        if (d.months) {
+          Object.keys(d.months).forEach(month => {
+            const box = document.getElementById("month-" + month);
+            if (!box) return;
+        
+            box.classList.remove("month-running", "month-done");
+        
+            if (d.months[month] === "RUNNING") {
+              box.classList.add("month-running");
+            }
+        
+            if (d.months[month] === "COMPLETED") {
+              box.classList.add("month-done");
+            }
+          });
+        }
         if (["COMPLETED","FAILED"].includes(d.status)) {
           clearInterval(jobInterval);
         }
@@ -232,7 +249,7 @@ document.getElementById("runBtn").onclick = () => {
 
   fetch("http://192.168.1.85:5000/run-gstr2b", {
     method: "POST",
-    headers: {"Content-Type":"application/json"},
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       gstin: gstid.value.trim(),
       password: password.value,
@@ -243,18 +260,22 @@ document.getElementById("runBtn").onclick = () => {
       client: "DEFAULT_CLIENT"
     })
   })
-  .then(d => {
-    if (!d || !d.job_id) {
-      showModal("Error", d.error || "Failed to start automation");
-      return;
+  .then(async r => {
+    const data = await r.json();
+    if (!r.ok) {
+      throw new Error(data.error || "Server error");
     }
-  
+    return data;
+  })
+  .then(d => {
     showModal(
       "GST Automation Started",
-      "Job ID:\n" + d.job_id + "\n\nStatus: RUNNING"
+      `Job ID:\n${d.job_id}\n\nStatus: RUNNING`
     );
-  
     startJobStatusPolling(d.job_id);
+  })
+  .catch(err => {
+    showModal("Error", err.message);
   });
 };
 </script>
@@ -269,4 +290,5 @@ document.getElementById("runBtn").onclick = () => {
 
 </body>
 </html>
+
 
