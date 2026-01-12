@@ -147,6 +147,17 @@
     background:#2d6cdf;color:white;border:none;border-radius:6px;">
     Run GSTR-2B Automation
   </button>
+  <button id="downloadBtn"
+    style="margin-top:15px;
+           padding:12px;
+           font-size:16px;
+           background:#2e7d32;
+           color:white;
+           border:none;
+           border-radius:6px;
+           display:none;">
+    Download ZIP
+  </button>
 </div>
 
 <!-- ===== Scripts ===== -->
@@ -237,8 +248,19 @@ function startJobStatusPolling(jobId) {
             }
           });
         }
-        if (["COMPLETED","FAILED"].includes(d.status)) {
+        if (d.status === "COMPLETED") {
           clearInterval(jobInterval);
+          document.getElementById("runBtn").disabled = false;
+          
+          if (d.zip_path) {
+            window.latestZipPath = d.zip_path;
+            document.getElementById("downloadBtn").style.display = "block";
+          }
+        }
+        
+        if (d.status === "FAILED") {
+          clearInterval(jobInterval);
+          document.getElementById("runBtn").disabled = false;
         }
       });
   }, 5000);
@@ -272,11 +294,23 @@ document.getElementById("runBtn").onclick = () => {
       "GST Automation Started",
       `Job ID:\n${d.job_id}\n\nStatus: RUNNING`
     );
+    document.getElementById("runBtn").disabled = true;
     startJobStatusPolling(d.job_id);
   })
   .catch(err => {
     showModal("Error", err.message);
   });
+};
+</script>
+<script>
+document.getElementById("downloadBtn").onclick = () => {
+  if (!window.latestZipPath) {
+    alert("ZIP not ready yet");
+    return;
+  }
+
+  window.location.href =
+    `http://192.168.1.85:5000/download?path=${encodeURIComponent(window.latestZipPath)}`;
 };
 </script>
 
@@ -290,5 +324,6 @@ document.getElementById("runBtn").onclick = () => {
 
 </body>
 </html>
+
 
 
