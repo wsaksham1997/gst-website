@@ -253,15 +253,14 @@ runBtn.onclick = () => {
 
 /* ✅ FINAL FIX — TRUSTED DOWNLOAD */
 modalDownloadBtn.onclick = () => {
-  if (!window.latestZipPath) return;
-
   const url =
     `http://192.168.1.85:5000/download?path=${encodeURIComponent(window.latestZipPath)}&t=${Date.now()}`;
 
-  window.open(url, "_blank"); // 🔑 important
+  window.open(url, "_blank"); // must be new tab
 };
 </script>
 
 </body>
 </html>
+
 
