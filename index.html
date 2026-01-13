@@ -289,9 +289,16 @@ runBtn.onclick = () => {
 };
 
 document.getElementById("modalDownloadBtn").onclick = () => {
+  if (!window.latestZipPath) {
+    alert("ZIP file not available");
+    return;
+  }
+
+  const ts = Date.now(); // 🔑 cache buster
+
   const link = document.createElement("a");
   link.href =
-    `http://192.168.1.85:5000/download?path=${encodeURIComponent(window.latestZipPath)}`;
+    `http://192.168.1.85:5000/download?path=${encodeURIComponent(window.latestZipPath)}&t=${ts}`;
   link.download = "";
   document.body.appendChild(link);
   link.click();
@@ -301,3 +308,4 @@ document.getElementById("modalDownloadBtn").onclick = () => {
 
 </body>
 </html>
+
