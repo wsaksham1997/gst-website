@@ -211,9 +211,9 @@ function poll(jobId) {
               : "Some months failed:\n" + (d.failed_months || []).join(", ")
           );
 
-          if (d.zip_path) {
+          if (d.download_url) {
             const link = document.getElementById("downloadLink");
-            link.href = `${API_BASE}/download?path=${encodeURIComponent(d.zip_path)}`;
+            link.href = API_BASE + d.download_url;
             link.style.display = "block";
           }
         }
@@ -250,4 +250,5 @@ runBtn.onclick = () => {
 
 </body>
 </html>
+
 
