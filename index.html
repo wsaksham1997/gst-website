@@ -131,10 +131,7 @@
     <h3 id="modalTitle"></h3>
     <pre id="modalMessage"></pre>
 
-    <!-- ✅ REAL DOWNLOAD LINK -->
-    <a id="downloadLink"
-       class="download-link"
-       target="_blank">
+    <a id="downloadLink" class="download-link" target="_blank">
       Download ZIP
     </a>
 
@@ -143,9 +140,14 @@
 </div>
 
 <script>
+/* ================= CONFIG ================= */
+const API_BASE = "http://192.168.1.85:5000";
+
+/* ================= INIT ================= */
 const fy = document.getElementById("fy");
 const month = document.getElementById("month");
 const runBtn = document.getElementById("runBtn");
+const fullYear = document.getElementById("fullYear");
 
 const months = ["April","May","June","July","August","September",
                 "October","November","December","January","February","March"];
@@ -156,9 +158,9 @@ for (let i = 2017; i <= y; i++) {
 }
 months.forEach(m => month.add(new Option(m, m)));
 
-document.getElementById("fullYear").onchange =
-  e => month.disabled = e.target.checked;
+fullYear.onchange = e => month.disabled = e.target.checked;
 
+/* ================= UI HELPERS ================= */
 function renderMonths(list) {
   const box = document.getElementById("monthProgress");
   box.innerHTML = "";
@@ -181,11 +183,13 @@ function closeModal() {
   jobModal.style.display = "none";
 }
 
+/* ================= POLLING ================= */
 function poll(jobId) {
-  const i = setInterval(() => {
-    fetch(`/job-status/${jobId}`)
+  const timer = setInterval(() => {
+    fetch(`${API_BASE}/job-status/${jobId}`)
       .then(r => r.json())
       .then(d => {
+
         Object.entries(d.months || {}).forEach(([m,s]) => {
           const el = document.getElementById("m-" + m);
           if (!el) return;
@@ -196,7 +200,7 @@ function poll(jobId) {
         });
 
         if (d.status === "COMPLETED") {
-          clearInterval(i);
+          clearInterval(timer);
           runBtn.disabled = false;
 
           showModal(
@@ -208,7 +212,7 @@ function poll(jobId) {
 
           if (d.zip_path) {
             const link = document.getElementById("downloadLink");
-            link.href = `/download?path=${encodeURIComponent(d.zip_path)}`;
+            link.href = `${API_BASE}/download?path=${encodeURIComponent(d.zip_path)}`;
             link.style.display = "block";
           }
         }
@@ -216,11 +220,12 @@ function poll(jobId) {
   }, 4000);
 }
 
+/* ================= RUN ================= */
 runBtn.onclick = () => {
   const all = fullYear.checked;
   renderMonths(all ? months : [month.value]);
 
-  fetch("/run-gstr2b", {
+  fetch(`${API_BASE}/run-gstr2b`, {
     method: "POST",
     headers: {"Content-Type":"application/json"},
     body: JSON.stringify({
