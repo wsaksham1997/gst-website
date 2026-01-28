@@ -70,9 +70,15 @@
     .modal-content {
       background: #fff;
       width: 450px;
-      margin: 12% auto;
+      margin: 10% auto;
       padding: 25px;
       border-radius: 8px;
+    }
+
+    .captcha-img {
+      display: block;
+      margin: 15px auto;
+      border: 1px solid #ccc;
     }
   </style>
 </head>
@@ -114,12 +120,22 @@
   </button>
 </div>
 
-<!-- MODAL -->
+<!-- STATUS MODAL -->
 <div id="jobModal" class="modal">
   <div class="modal-content">
     <h3 id="modalTitle"></h3>
     <pre id="modalMessage"></pre>
     <button onclick="closeModal()">Close</button>
+  </div>
+</div>
+
+<!-- CAPTCHA MODAL -->
+<div id="captchaModal" class="modal">
+  <div class="modal-content">
+    <h3>Enter CAPTCHA</h3>
+    <img id="captchaImg" class="captcha-img">
+    <input id="captchaText" placeholder="Enter captcha">
+    <button onclick="submitCaptcha()">Submit Captcha</button>
   </div>
 </div>
 
@@ -132,6 +148,8 @@ const fy = document.getElementById("fy");
 const month = document.getElementById("month");
 const runBtn = document.getElementById("runBtn");
 const fullYear = document.getElementById("fullYear");
+
+let CURRENT_JOB_ID = null;
 
 const months = ["April","May","June","July","August","September",
                 "October","November","December","January","February","March"];
@@ -167,23 +185,38 @@ function closeModal() {
   jobModal.style.display = "none";
 }
 
-/* ===== FINAL FIX: FORCE DOWNLOAD USING BLOB ===== */
+/* ================= CAPTCHA ================= */
+function showCaptcha(jobId) {
+  CURRENT_JOB_ID = jobId;
+  captchaImg.src = `${API_BASE}/captcha/${jobId}?t=${Date.now()}`;
+  captchaModal.style.display = "block";
+}
+
+function submitCaptcha() {
+  const val = captchaText.value.trim();
+  if (!val) return alert("Enter captcha");
+
+  fetch(`${API_BASE}/submit-captcha/${CURRENT_JOB_ID}`, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ captcha: val })
+  })
+  .then(() => {
+    captchaModal.style.display = "none";
+    captchaText.value = "";
+  });
+}
+
+/* ===== FORCE DOWNLOAD ===== */
 async function autoDownload(downloadUrl) {
   const response = await fetch(downloadUrl);
-  if (!response.ok) {
-    alert("Download failed");
-    return;
-  }
-
   const blob = await response.blob();
   const url = window.URL.createObjectURL(blob);
-
   const a = document.createElement("a");
   a.href = url;
   a.download = "GST_2B_Files.zip";
   document.body.appendChild(a);
   a.click();
-
   a.remove();
   window.URL.revokeObjectURL(url);
 }
@@ -194,6 +227,11 @@ function poll(jobId) {
     fetch(`${API_BASE}/job-status/${jobId}`)
       .then(r => r.json())
       .then(d => {
+
+        if (d.status === "WAITING_FOR_CAPTCHA") {
+          showCaptcha(jobId);
+          return;
+        }
 
         Object.entries(d.months || {}).forEach(([m,s]) => {
           const el = document.getElementById("m-" + m);
@@ -207,15 +245,10 @@ function poll(jobId) {
         if (d.status === "COMPLETED") {
           clearInterval(timer);
           runBtn.disabled = false;
-
-          showModal(
-            "GST Automation Result",
+          showModal("GST Automation Result",
             "All months processed.\nDownload will start automatically."
           );
-
-          if (d.download_url) {
-            autoDownload(API_BASE + d.download_url);
-          }
+          if (d.download_url) autoDownload(API_BASE + d.download_url);
         }
       });
   }, 4000);
@@ -241,6 +274,7 @@ runBtn.onclick = () => {
   })
   .then(r => r.json())
   .then(d => {
+    CURRENT_JOB_ID = d.job_id;
     showModal("Automation Started", `Job ID:\n${d.job_id}`);
     runBtn.disabled = true;
     poll(d.job_id);
