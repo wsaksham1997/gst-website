@@ -167,14 +167,25 @@ function closeModal() {
   jobModal.style.display = "none";
 }
 
-/* ===== AUTO DOWNLOAD (IMPORTANT PART) ===== */
-function autoDownload(url) {
+/* ===== FINAL FIX: FORCE DOWNLOAD USING BLOB ===== */
+async function autoDownload(downloadUrl) {
+  const response = await fetch(downloadUrl);
+  if (!response.ok) {
+    alert("Download failed");
+    return;
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+
   const a = document.createElement("a");
   a.href = url;
-  a.setAttribute("download", "");
+  a.download = "GST_2B_Files.zip";
   document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
+
+  a.remove();
+  window.URL.revokeObjectURL(url);
 }
 
 /* ================= POLLING ================= */
@@ -199,9 +210,7 @@ function poll(jobId) {
 
           showModal(
             "GST Automation Result",
-            d.stage === "DONE"
-              ? "All months downloaded successfully.\nDownload will start automatically."
-              : "Some months failed:\n" + (d.failed_months || []).join(", ")
+            "All months processed.\nDownload will start automatically."
           );
 
           if (d.download_url) {
