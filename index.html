@@ -74,26 +74,6 @@
       padding: 25px;
       border-radius: 8px;
     }
-
-    .download-link {
-      display: none;
-      margin-top: 15px;
-      padding: 12px;
-      background: #f1f8e9;
-      border: 1px solid #81c784;
-      border-radius: 6px;
-      text-align: center;
-    }
-
-    .download-link a {
-      color: #2e7d32;
-      font-weight: bold;
-      text-decoration: none;
-    }
-
-    .download-link a:hover {
-      text-decoration: underline;
-    }
   </style>
 </head>
 
@@ -139,10 +119,6 @@
   <div class="modal-content">
     <h3 id="modalTitle"></h3>
     <pre id="modalMessage"></pre>
-
-    <!-- CLICKABLE LINK (NO BUTTON) -->
-    <div id="downloadLink" class="download-link"></div>
-
     <button onclick="closeModal()">Close</button>
   </div>
 </div>
@@ -150,7 +126,6 @@
 <script>
 /* ================= CONFIG ================= */
 const API_BASE = "http://192.168.1.85:5000";
-console.log("API BASE =", API_BASE);
 
 /* ================= INIT ================= */
 const fy = document.getElementById("fy");
@@ -185,12 +160,21 @@ function renderMonths(list) {
 function showModal(t, m) {
   modalTitle.innerText = t;
   modalMessage.innerText = m;
-  document.getElementById("downloadLink").style.display = "none";
   jobModal.style.display = "block";
 }
 
 function closeModal() {
   jobModal.style.display = "none";
+}
+
+/* ===== AUTO DOWNLOAD (IMPORTANT PART) ===== */
+function autoDownload(url) {
+  const a = document.createElement("a");
+  a.href = url;
+  a.setAttribute("download", "");
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 /* ================= POLLING ================= */
@@ -216,21 +200,12 @@ function poll(jobId) {
           showModal(
             "GST Automation Result",
             d.stage === "DONE"
-              ? "All months downloaded successfully."
+              ? "All months downloaded successfully.\nDownload will start automatically."
               : "Some months failed:\n" + (d.failed_months || []).join(", ")
           );
 
           if (d.download_url) {
-            const box = document.getElementById("downloadLink");
-            box.innerHTML = `
-              <div>
-                📦 <strong>Download ZIP:</strong><br>
-                <a href="${API_BASE + d.download_url}" target="_blank">
-                  Click here to download
-                </a>
-              </div>
-            `;
-            box.style.display = "block";
+            autoDownload(API_BASE + d.download_url);
           }
         }
       });
