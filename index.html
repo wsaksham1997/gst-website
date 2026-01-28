@@ -78,12 +78,18 @@
     .download-link {
       display: none;
       margin-top: 15px;
-      padding: 10px 16px;
-      background: #2e7d32;
-      color: white;
+      padding: 12px;
+      background: #e8f5e9;
+      border: 1px solid #2e7d32;
       border-radius: 5px;
-      text-decoration: none;
-      text-align: center;
+      color: #1b5e20;
+      word-break: break-all;
+    }
+
+    .download-link a {
+      color: #1b5e20;
+      font-weight: bold;
+      text-decoration: underline;
     }
   </style>
 </head>
@@ -131,9 +137,8 @@
     <h3 id="modalTitle"></h3>
     <pre id="modalMessage"></pre>
 
-    <a id="downloadLink" class="download-link" target="_blank">
-      Download ZIP
-    </a>
+    <!-- DOWNLOAD LINK SHOWN HERE -->
+    <div id="downloadLink" class="download-link"></div>
 
     <button onclick="closeModal()">Close</button>
   </div>
@@ -141,7 +146,7 @@
 
 <script>
 /* ================= CONFIG ================= */
-const API_BASE = "http://192.168.1.85:5000";
+const API_BASE = "https://192.168.1.85:5000";
 console.log("API BASE =", API_BASE);
 
 /* ================= INIT ================= */
@@ -211,10 +216,15 @@ function poll(jobId) {
               : "Some months failed:\n" + (d.failed_months || []).join(", ")
           );
 
-          if (d.download_url) {
-            const link = document.getElementById("downloadLink");
-            link.href = API_BASE + d.download_url;
-            link.style.display = "block";
+          if (d.zip_path) {
+            const linkBox = document.getElementById("downloadLink");
+            const url = `${API_BASE}/download?path=${encodeURIComponent(d.zip_path)}`;
+
+            linkBox.innerHTML = `
+              <b>Download link:</b><br>
+              <a href="${url}" target="_blank">${url}</a>
+            `;
+            linkBox.style.display = "block";
           }
         }
       });
@@ -250,6 +260,3 @@ runBtn.onclick = () => {
 
 </body>
 </html>
-
-
-
