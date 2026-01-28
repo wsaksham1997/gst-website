@@ -79,16 +79,19 @@
       display: none;
       margin-top: 15px;
       padding: 12px;
-      background: #e8f5e9;
-      border: 1px solid #2e7d32;
-      border-radius: 5px;
-      color: #1b5e20;
-      word-break: break-all;
+      background: #f1f8e9;
+      border: 1px solid #81c784;
+      border-radius: 6px;
+      text-align: center;
     }
 
     .download-link a {
-      color: #1b5e20;
+      color: #2e7d32;
       font-weight: bold;
+      text-decoration: none;
+    }
+
+    .download-link a:hover {
       text-decoration: underline;
     }
   </style>
@@ -137,7 +140,7 @@
     <h3 id="modalTitle"></h3>
     <pre id="modalMessage"></pre>
 
-    <!-- DOWNLOAD LINK SHOWN HERE -->
+    <!-- CLICKABLE LINK (NO BUTTON) -->
     <div id="downloadLink" class="download-link"></div>
 
     <button onclick="closeModal()">Close</button>
@@ -146,7 +149,7 @@
 
 <script>
 /* ================= CONFIG ================= */
-const API_BASE = "https://192.168.1.85:5000";
+const API_BASE = "http://192.168.1.85:5000";
 console.log("API BASE =", API_BASE);
 
 /* ================= INIT ================= */
@@ -182,6 +185,7 @@ function renderMonths(list) {
 function showModal(t, m) {
   modalTitle.innerText = t;
   modalMessage.innerText = m;
+  document.getElementById("downloadLink").style.display = "none";
   jobModal.style.display = "block";
 }
 
@@ -216,15 +220,17 @@ function poll(jobId) {
               : "Some months failed:\n" + (d.failed_months || []).join(", ")
           );
 
-          if (d.zip_path) {
-            const linkBox = document.getElementById("downloadLink");
-            const url = `${API_BASE}/download?path=${encodeURIComponent(d.zip_path)}`;
-
-            linkBox.innerHTML = `
-              <b>Download link:</b><br>
-              <a href="${url}" target="_blank">${url}</a>
+          if (d.download_url) {
+            const box = document.getElementById("downloadLink");
+            box.innerHTML = `
+              <div>
+                📦 <strong>Download ZIP:</strong><br>
+                <a href="${API_BASE + d.download_url}" target="_blank">
+                  Click here to download
+                </a>
+              </div>
             `;
-            linkBox.style.display = "block";
+            box.style.display = "block";
           }
         }
       });
