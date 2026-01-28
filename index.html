@@ -1,282 +1,259 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GST Download Configuration</title>
+<meta charset="UTF-8">
+<title>GST Download Configuration</title>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f7fb;
-      padding: 30px;
-    }
-    .container {
-      max-width: 700px;
-      margin: auto;
-      background: #ffffff;
-      padding: 25px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    h2 { margin-bottom: 20px; color: #333; }
-    label { display: block; margin-top: 15px; font-weight: bold; }
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+  padding: 30px;
+}
 
-    input, select {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-    }
+.container {
+  max-width: 700px;
+  margin: auto;
+  background: white;
+  padding: 25px;
+  border-radius: 8px;
+}
 
-    .row { display: flex; gap: 20px; }
-    .row > div { flex: 1; }
+label { display:block; margin-top:12px; font-weight:bold; }
+input, select {
+  width:100%;
+  padding:8px;
+  margin-top:5px;
+}
 
-    #monthProgress {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 10px;
-      margin-top: 10px;
-    }
+#monthProgress {
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:8px;
+  margin-top:10px;
+}
 
-    .month-box {
-      padding: 10px;
-      text-align: center;
-      border-radius: 6px;
-      background: #e0e0e0;
-      font-size: 13px;
-    }
-    .month-running { background: #90caf9; }
-    .month-done { background: #81c784; color: white; }
-    .month-failed { background: #e57373; color: white; }
+.month-box {
+  padding:8px;
+  text-align:center;
+  border-radius:6px;
+  background:#ddd;
+}
+.month-running { background:#90caf9; }
+.month-done { background:#81c784; color:white; }
+.month-failed { background:#e57373; color:white; }
 
-    button {
-      margin-top: 20px;
-      padding: 12px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
+button {
+  margin-top:15px;
+  padding:10px;
+  cursor:pointer;
+}
 
-    .modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      z-index: 9999;
-    }
+.modal {
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.4);
+  z-index:9999;
+}
 
-    .modal-content {
-      background: #fff;
-      width: 450px;
-      margin: 10% auto;
-      padding: 25px;
-      border-radius: 8px;
-    }
+.modal-content {
+  background:white;
+  width:420px;
+  margin:10% auto;
+  padding:20px;
+  border-radius:8px;
+}
 
-    .captcha-img {
-      display: block;
-      margin: 15px auto;
-      border: 1px solid #ccc;
-    }
-  </style>
+/* CAPTCHA FIX */
+#captchaImg {
+  display:block;
+  width:240px;
+  height:auto;
+  margin:15px auto;
+  border:1px solid #ccc;
+}
+</style>
 </head>
 
 <body>
 
 <div class="container">
-  <h2>GST Portal Download Details</h2>
+<h2>GST Portal Download</h2>
 
-  <label>GST ID</label>
-  <input id="gstid">
+<label>GSTIN</label>
+<input id="gstid">
 
-  <label>Password</label>
-  <input id="password" type="password">
+<label>Password</label>
+<input id="password" type="password">
 
-  <label>Download Path</label>
-  <input id="path">
+<label>Download Path</label>
+<input id="path">
 
-  <div class="row">
-    <div>
-      <label>Financial Year</label>
-      <select id="fy"></select>
-    </div>
-    <div>
-      <label>Month</label>
-      <select id="month"></select>
-    </div>
-  </div>
+<label>Financial Year</label>
+<select id="fy"></select>
 
-  <label>
-    <input type="checkbox" id="fullYear"> Entire Financial Year
-  </label>
+<label>Month</label>
+<select id="month"></select>
 
-  <label>Download Progress</label>
-  <div id="monthProgress"></div>
+<label>
+  <input type="checkbox" id="fullYear"> Entire FY
+</label>
 
-  <button id="runBtn" style="background:#2d6cdf;color:white;">
-    Run GSTR-2B Automation
-  </button>
+<label>Progress</label>
+<div id="monthProgress"></div>
+
+<button id="runBtn">Run Automation</button>
 </div>
 
 <!-- STATUS MODAL -->
 <div id="jobModal" class="modal">
-  <div class="modal-content">
-    <h3 id="modalTitle"></h3>
-    <pre id="modalMessage"></pre>
-    <button onclick="closeModal()">Close</button>
-  </div>
+<div class="modal-content">
+<h3 id="modalTitle"></h3>
+<pre id="modalMessage"></pre>
+<button onclick="closeModal()">Close</button>
+</div>
 </div>
 
 <!-- CAPTCHA MODAL -->
 <div id="captchaModal" class="modal">
-  <div class="modal-content">
-    <h3>Enter CAPTCHA</h3>
-    <img id="captchaImg" class="captcha-img">
-    <input id="captchaText" placeholder="Enter captcha">
-    <button onclick="submitCaptcha()">Submit Captcha</button>
-  </div>
+<div class="modal-content">
+<h3>Enter CAPTCHA</h3>
+<img id="captchaImg">
+<input id="captchaText" placeholder="Enter captcha">
+<button id="captchaSubmitBtn">Submit Captcha</button>
+</div>
 </div>
 
 <script>
-/* ================= CONFIG ================= */
 const API_BASE = "http://192.168.1.85:5000";
 
-/* ================= INIT ================= */
+let CURRENT_JOB_ID = null;
+let POLL_TIMER = null;
+let POLLING_PAUSED = false;
+
+/* ===== INIT FY & MONTH ===== */
 const fy = document.getElementById("fy");
 const month = document.getElementById("month");
-const runBtn = document.getElementById("runBtn");
 const fullYear = document.getElementById("fullYear");
 
-let CURRENT_JOB_ID = null;
-
 const months = ["April","May","June","July","August","September",
-                "October","November","December","January","February","March"];
+"October","November","December","January","February","March"];
 
 const y = new Date().getFullYear();
-for (let i = 2017; i <= y; i++) {
-  fy.add(new Option(`FY ${i}-${String(i+1).slice(-2)}`, `${i}-${String(i+1).slice(-2)}`));
+for (let i=2017;i<=y;i++) {
+  fy.add(new Option(`${i}-${String(i+1).slice(-2)}`,`${i}-${String(i+1).slice(-2)}`));
 }
-months.forEach(m => month.add(new Option(m, m)));
+months.forEach(m=>month.add(new Option(m,m)));
+fullYear.onchange=e=>month.disabled=e.target.checked;
 
-fullYear.onchange = e => month.disabled = e.target.checked;
-
-/* ================= UI HELPERS ================= */
-function renderMonths(list) {
-  const box = document.getElementById("monthProgress");
-  box.innerHTML = "";
-  list.forEach(m => {
-    const d = document.createElement("div");
-    d.id = "m-" + m;
-    d.className = "month-box";
-    d.innerText = m;
+/* ===== UI HELPERS ===== */
+function renderMonths(list){
+  const box=document.getElementById("monthProgress");
+  box.innerHTML="";
+  list.forEach(m=>{
+    const d=document.createElement("div");
+    d.id="m-"+m;
+    d.className="month-box";
+    d.innerText=m;
     box.appendChild(d);
   });
 }
 
-function showModal(t, m) {
-  modalTitle.innerText = t;
-  modalMessage.innerText = m;
-  jobModal.style.display = "block";
+function showModal(t,m){
+  modalTitle.innerText=t;
+  modalMessage.innerText=m;
+  jobModal.style.display="block";
 }
+function closeModal(){ jobModal.style.display="none"; }
 
-function closeModal() {
-  jobModal.style.display = "none";
-}
-
-/* ================= CAPTCHA ================= */
-function showCaptcha(jobId) {
-  CURRENT_JOB_ID = jobId;
+/* ===== CAPTCHA FLOW (FIXED) ===== */
+function showCaptcha(jobId){
+  POLLING_PAUSED = true;
+  captchaText.value = "";
   captchaImg.src = `${API_BASE}/captcha/${jobId}?t=${Date.now()}`;
-  captchaModal.style.display = "block";
+  captchaModal.style.display="block";
 }
 
-function submitCaptcha() {
-  const val = captchaText.value.trim();
-  if (!val) return alert("Enter captcha");
+document.getElementById("captchaSubmitBtn").onclick = () => {
+  const text = captchaText.value.trim();
+  if (!text) return alert("Enter captcha");
 
-  fetch(`${API_BASE}/submit-captcha/${CURRENT_JOB_ID}`, {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ captcha: val })
+  fetch(`${API_BASE}/submit-captcha/${CURRENT_JOB_ID}`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({captcha:text})
   })
-  .then(() => {
-    captchaModal.style.display = "none";
-    captchaText.value = "";
+  .then(()=>{
+    captchaModal.style.display="none";
+    POLLING_PAUSED = false;   // ✅ resume polling ONLY now
   });
-}
+};
 
-/* ===== FORCE DOWNLOAD ===== */
-async function autoDownload(downloadUrl) {
-  const response = await fetch(downloadUrl);
-  const blob = await response.blob();
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "GST_2B_Files.zip";
-  document.body.appendChild(a);
+/* ===== DOWNLOAD FIX ===== */
+async function autoDownload(url){
+  const r=await fetch(url);
+  const b=await r.blob();
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(b);
+  a.download="GST_2B.zip";
   a.click();
-  a.remove();
-  window.URL.revokeObjectURL(url);
 }
 
-/* ================= POLLING ================= */
-function poll(jobId) {
-  const timer = setInterval(() => {
+/* ===== POLLING (FIXED) ===== */
+function poll(jobId){
+  POLL_TIMER = setInterval(()=>{
+    if (POLLING_PAUSED) return;
+
     fetch(`${API_BASE}/job-status/${jobId}`)
-      .then(r => r.json())
-      .then(d => {
+    .then(r=>r.json())
+    .then(d=>{
 
-        if (d.status === "WAITING_FOR_CAPTCHA") {
-          showCaptcha(jobId);
-          return;
-        }
+      if (d.status==="WAITING_FOR_CAPTCHA"){
+        showCaptcha(jobId);
+        return;
+      }
 
-        Object.entries(d.months || {}).forEach(([m,s]) => {
-          const el = document.getElementById("m-" + m);
-          if (!el) return;
-          el.className = "month-box " +
-            (s === "RUNNING" ? "month-running" :
-             s === "COMPLETED" ? "month-done" :
-             s === "FAILED" ? "month-failed" : "");
-        });
-
-        if (d.status === "COMPLETED") {
-          clearInterval(timer);
-          runBtn.disabled = false;
-          showModal("GST Automation Result",
-            "All months processed.\nDownload will start automatically."
-          );
-          if (d.download_url) autoDownload(API_BASE + d.download_url);
-        }
+      Object.entries(d.months||{}).forEach(([m,s])=>{
+        const el=document.getElementById("m-"+m);
+        if(!el)return;
+        el.className="month-box "+
+          (s==="RUNNING"?"month-running":
+           s==="COMPLETED"?"month-done":
+           s==="FAILED"?"month-failed":"");
       });
-  }, 4000);
+
+      if(d.status==="COMPLETED"){
+        clearInterval(POLL_TIMER);
+        showModal("Completed","Download will start automatically");
+        autoDownload(API_BASE+d.download_url);
+      }
+    });
+  },4000);
 }
 
-/* ================= RUN ================= */
-runBtn.onclick = () => {
-  const all = fullYear.checked;
-  renderMonths(all ? months : [month.value]);
+/* ===== RUN ===== */
+runBtn.onclick=()=>{
+  const all=fullYear.checked;
+  renderMonths(all?months:[month.value]);
 
-  fetch(`${API_BASE}/run-gstr2b`, {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({
-      gstin: gstid.value,
-      password: password.value,
-      fy: fy.value,
-      only_fy: all,
-      month: all ? "" : month.value,
-      path: path.value,
-      client: "DEFAULT_CLIENT"
+  fetch(`${API_BASE}/run-gstr2b`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      gstin:gstid.value,
+      password:password.value,
+      fy:fy.value,
+      only_fy:all,
+      month:all?"":month.value,
+      path:path.value,
+      client:"DEFAULT"
     })
   })
-  .then(r => r.json())
-  .then(d => {
-    CURRENT_JOB_ID = d.job_id;
-    showModal("Automation Started", `Job ID:\n${d.job_id}`);
-    runBtn.disabled = true;
+  .then(r=>r.json())
+  .then(d=>{
+    CURRENT_JOB_ID=d.job_id;
+    showModal("Started",`Job ID: ${d.job_id}`);
     poll(d.job_id);
   });
 };
