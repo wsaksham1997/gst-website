@@ -67,7 +67,7 @@ button {
   text-align:center;
 }
 
-/* CAPTCHA IMAGE – FIXED */
+/* CAPTCHA IMAGE */
 #captchaImg {
   display:block;
   width:260px;
@@ -170,7 +170,7 @@ function showModal(t,m){
 }
 function closeModal(){ jobModal.style.display="none"; }
 
-/* CAPTCHA FLOW — FINAL FIX */
+/* CAPTCHA FLOW — FINAL */
 function showCaptcha(jobId){
   if (captchaModal.style.display === "block") return;
 
@@ -178,13 +178,13 @@ function showCaptcha(jobId){
   captchaText.value = "";
   captchaModal.style.display = "block";
 
-  // Force image reload AFTER modal opens
   setTimeout(() => {
-    captchaImg.src = `${API_BASE}/captcha/${jobId}?t=${Date.now()}`;
+    captchaImg.src =
+      `${API_BASE}/captcha/${jobId}?t=${Date.now()}&r=${Math.random()}`;
   }, 100);
 }
 
-document.getElementById("captchaSubmitBtn").onclick = () => {
+captchaSubmitBtn.onclick = () => {
   const text = captchaText.value.trim();
   if (!text) return alert("Enter captcha");
 
@@ -195,6 +195,7 @@ document.getElementById("captchaSubmitBtn").onclick = () => {
   })
   .then(()=>{
     captchaModal.style.display="none";
+    captchaImg.src = "";
     POLLING_PAUSED = false;
   });
 };
@@ -235,7 +236,7 @@ function poll(jobId){
       if(d.status==="COMPLETED"){
         clearInterval(POLL_TIMER);
         showModal("Completed","Download will start automatically");
-        autoDownload(API_BASE+d.download_url);
+        autoDownload(API_BASE + d.download_url);
       }
     });
   },4000);
