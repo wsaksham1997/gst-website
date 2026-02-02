@@ -49,11 +49,12 @@ button {
   cursor:pointer;
 }
 
+/* MODALS */
 .modal {
   display:none;
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,0.4);
+  background:rgba(0,0,0,0.5);
   z-index:9999;
 }
 
@@ -63,15 +64,17 @@ button {
   margin:10% auto;
   padding:20px;
   border-radius:8px;
+  text-align:center;
 }
 
-/* CAPTCHA FIX */
+/* CAPTCHA IMAGE – FIXED */
 #captchaImg {
   display:block;
-  width:240px;
+  width:260px;
   height:auto;
   margin:15px auto;
   border:1px solid #ccc;
+  background:#f0f0f0;
 }
 </style>
 </head>
@@ -108,21 +111,21 @@ button {
 
 <!-- STATUS MODAL -->
 <div id="jobModal" class="modal">
-<div class="modal-content">
-<h3 id="modalTitle"></h3>
-<pre id="modalMessage"></pre>
-<button onclick="closeModal()">Close</button>
-</div>
+  <div class="modal-content">
+    <h3 id="modalTitle"></h3>
+    <pre id="modalMessage"></pre>
+    <button onclick="closeModal()">Close</button>
+  </div>
 </div>
 
 <!-- CAPTCHA MODAL -->
 <div id="captchaModal" class="modal">
-<div class="modal-content">
-<h3>Enter CAPTCHA</h3>
-<img id="captchaImg">
-<input id="captchaText" placeholder="Enter captcha">
-<button id="captchaSubmitBtn">Submit Captcha</button>
-</div>
+  <div class="modal-content">
+    <h3>Enter CAPTCHA</h3>
+    <img id="captchaImg" alt="Captcha will appear here">
+    <input id="captchaText" placeholder="Enter captcha">
+    <button id="captchaSubmitBtn">Submit Captcha</button>
+  </div>
 </div>
 
 <script>
@@ -132,7 +135,7 @@ let CURRENT_JOB_ID = null;
 let POLL_TIMER = null;
 let POLLING_PAUSED = false;
 
-/* ===== INIT FY & MONTH ===== */
+/* INIT FY & MONTH */
 const fy = document.getElementById("fy");
 const month = document.getElementById("month");
 const fullYear = document.getElementById("fullYear");
@@ -147,7 +150,7 @@ for (let i=2017;i<=y;i++) {
 months.forEach(m=>month.add(new Option(m,m)));
 fullYear.onchange=e=>month.disabled=e.target.checked;
 
-/* ===== UI HELPERS ===== */
+/* UI HELPERS */
 function renderMonths(list){
   const box=document.getElementById("monthProgress");
   box.innerHTML="";
@@ -167,12 +170,18 @@ function showModal(t,m){
 }
 function closeModal(){ jobModal.style.display="none"; }
 
-/* ===== CAPTCHA FLOW (FIXED) ===== */
+/* CAPTCHA FLOW — FINAL FIX */
 function showCaptcha(jobId){
+  if (captchaModal.style.display === "block") return;
+
   POLLING_PAUSED = true;
   captchaText.value = "";
-  captchaImg.src = `${API_BASE}/captcha/${jobId}?t=${Date.now()}`;
-  captchaModal.style.display="block";
+  captchaModal.style.display = "block";
+
+  // Force image reload AFTER modal opens
+  setTimeout(() => {
+    captchaImg.src = `${API_BASE}/captcha/${jobId}?t=${Date.now()}`;
+  }, 100);
 }
 
 document.getElementById("captchaSubmitBtn").onclick = () => {
@@ -186,11 +195,11 @@ document.getElementById("captchaSubmitBtn").onclick = () => {
   })
   .then(()=>{
     captchaModal.style.display="none";
-    POLLING_PAUSED = false;   // ✅ resume polling ONLY now
+    POLLING_PAUSED = false;
   });
 };
 
-/* ===== DOWNLOAD FIX ===== */
+/* DOWNLOAD */
 async function autoDownload(url){
   const r=await fetch(url);
   const b=await r.blob();
@@ -200,7 +209,7 @@ async function autoDownload(url){
   a.click();
 }
 
-/* ===== POLLING (FIXED) ===== */
+/* POLLING */
 function poll(jobId){
   POLL_TIMER = setInterval(()=>{
     if (POLLING_PAUSED) return;
@@ -232,7 +241,7 @@ function poll(jobId){
   },4000);
 }
 
-/* ===== RUN ===== */
+/* RUN */
 runBtn.onclick=()=>{
   const all=fullYear.checked;
   renderMonths(all?months:[month.value]);
