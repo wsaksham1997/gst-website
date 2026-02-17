@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: gst-backend
+    runtime: python
+    buildCommand: ""
+    startCommand: gunicorn login_api:app
