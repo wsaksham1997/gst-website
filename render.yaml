@@ -1,6 +1,6 @@
 services:
   - type: web
     name: gst-backend
-    runtime: python
+    env: python
     buildCommand: ""
-    startCommand: gunicorn login_api:app
+    startCommand: gunicorn login_api:app --bind 0.0.0.0:$PORT
