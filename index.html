@@ -150,8 +150,8 @@ button {
 
 
 <script>
-const API_BASE = "http://192.168.1.85:5000";
-const LOGIN_API = "http://192.168.1.85:5001/login";
+const API_BASE = "https://gst-website.onrender.com";
+const LOGIN_API = "https://gst-website.onrender.com";
 
 let CURRENT_JOB_ID = null;
 let POLL_TIMER = null;
@@ -164,32 +164,34 @@ function doLogin(){
   const id = document.getElementById("loginId").value;
   const pass = document.getElementById("loginPassword").value;
 
-  fetch(`${API_BASE}/login`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      login_id:loginId.value,
-      password:loginPassword.value
-    })
+  fetch(`${LOGIN_API}`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+          login_id: document.getElementById("loginId").value,
+          password: document.getElementById("loginPassword").value
+      })
   })
   .then(async r=>{
-    const data = await r.json();
-  
-    if(!r.ok){
-      throw new Error(data.message || "Login failed");
-    }
-    return data;
+      const data = await r.json();
+    
+      if(!r.ok){
+          throw new Error(data.message || "Login failed");
+      }
+      return data;
   })
   .then(d=>{
-    if(d.status==="success"){
-      alert("Login Success");
-    } else {
-      alert("Invalid credentials");
-    }
+      if(d.status==="success"){
+          document.getElementById("loginPage").style.display="none";
+          document.getElementById("gstrPage").style.display="block";
+      } else {
+          alert("Invalid credentials");
+      }
   })
   .catch(e=>{
-    alert("Server Error: "+e.message);
+      alert("Server Error: "+e.message);
   });
+
 
 }
 
@@ -335,4 +337,5 @@ runBtn.onclick=()=>{
 
 </body>
 </html>
+
 
