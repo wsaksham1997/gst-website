@@ -49,7 +49,6 @@ button {
   cursor:pointer;
 }
 
-/* MODALS */
 .modal {
   display:none;
   position:fixed;
@@ -67,7 +66,6 @@ button {
   text-align:center;
 }
 
-/* CAPTCHA IMAGE */
 #captchaImg {
   display:block;
   width:260px;
@@ -80,6 +78,25 @@ button {
 </head>
 
 <body>
+
+<!-- 🔐 LOGIN PAGE -->
+<div id="loginPage" class="container">
+<h2>Software Login</h2>
+
+<label>User ID</label>
+<input id="loginId">
+
+<label>Password</label>
+<input id="loginPassword" type="password">
+
+<button onclick="doLogin()">Login</button>
+
+<p id="loginError" style="color:red;"></p>
+</div>
+
+
+<!-- 🟢 GST PAGE (Hidden until login success) -->
+<div id="gstrPage" style="display:none;">
 
 <div class="container">
 <h2>GST Portal Download</h2>
@@ -109,6 +126,9 @@ button {
 <button id="runBtn">Run Automation</button>
 </div>
 
+</div>
+
+
 <!-- STATUS MODAL -->
 <div id="jobModal" class="modal">
   <div class="modal-content">
@@ -122,18 +142,49 @@ button {
 <div id="captchaModal" class="modal">
   <div class="modal-content">
     <h3>Enter CAPTCHA</h3>
-    <img id="captchaImg" alt="Captcha will appear here">
+    <img id="captchaImg">
     <input id="captchaText" placeholder="Enter captcha">
     <button id="captchaSubmitBtn">Submit Captcha</button>
   </div>
 </div>
 
+
 <script>
 const API_BASE = "http://192.168.1.85:5000";
+const LOGIN_API = "http://192.168.1.85:5001/login";
 
 let CURRENT_JOB_ID = null;
 let POLL_TIMER = null;
 let POLLING_PAUSED = false;
+
+
+/* 🔐 LOGIN */
+function doLogin(){
+
+  const id = document.getElementById("loginId").value;
+  const pass = document.getElementById("loginPassword").value;
+
+  fetch(LOGIN_API,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      login_id:id,
+      password:pass
+    })
+  })
+  .then(r=>r.json())
+  .then(d=>{
+
+    if(d.status==="success"){
+      document.getElementById("loginPage").style.display="none";
+      document.getElementById("gstrPage").style.display="block";
+    } else {
+      document.getElementById("loginError").innerText = "Invalid Login";
+    }
+
+  });
+}
+
 
 /* INIT FY & MONTH */
 const fy = document.getElementById("fy");
@@ -149,6 +200,7 @@ for (let i=2017;i<=y;i++) {
 }
 months.forEach(m=>month.add(new Option(m,m)));
 fullYear.onchange=e=>month.disabled=e.target.checked;
+
 
 /* UI HELPERS */
 function renderMonths(list){
@@ -170,7 +222,8 @@ function showModal(t,m){
 }
 function closeModal(){ jobModal.style.display="none"; }
 
-/* CAPTCHA FLOW — FINAL */
+
+/* CAPTCHA */
 function showCaptcha(jobId){
   if (captchaModal.style.display === "block") return;
 
@@ -200,6 +253,7 @@ captchaSubmitBtn.onclick = () => {
   });
 };
 
+
 /* DOWNLOAD */
 async function autoDownload(url){
   const r=await fetch(url);
@@ -209,6 +263,7 @@ async function autoDownload(url){
   a.download="GST_2B.zip";
   a.click();
 }
+
 
 /* POLLING */
 function poll(jobId){
@@ -242,6 +297,7 @@ function poll(jobId){
   },4000);
 }
 
+
 /* RUN */
 runBtn.onclick=()=>{
   const all=fullYear.checked;
@@ -271,4 +327,3 @@ runBtn.onclick=()=>{
 
 </body>
 </html>
-
