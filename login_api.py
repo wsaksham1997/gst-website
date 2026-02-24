@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
@@ -70,4 +71,5 @@ def login():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001)
+
 
