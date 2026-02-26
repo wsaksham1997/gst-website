@@ -94,10 +94,16 @@ button {
 <p id="loginError" style="color:red;"></p>
 </div>
 
+<!-- 🟡 INDEX PAGE -->
+<div id="indexPage" style="display:none;">
+<div class="container" style="text-align:center;">
+<h2>GST Software - AKGVG</h2>
+<button onclick="openGSTRPage()">Download GSTR 2B</button>
+</div>
+</div>
 
-<!-- 🟢 GST PAGE (Hidden until login success) -->
+<!-- 🟢 GSTR 2B PAGE -->
 <div id="gstrPage" style="display:none;">
-
 <div class="container">
 <h2>GST Portal Download</h2>
 
@@ -125,9 +131,7 @@ button {
 
 <button id="runBtn">Run Automation</button>
 </div>
-
 </div>
-
 
 <!-- STATUS MODAL -->
 <div id="jobModal" class="modal">
@@ -148,7 +152,6 @@ button {
   </div>
 </div>
 
-
 <script>
 const API_BASE = "http://127.0.0.1:5000";
 const LOGIN_API = "http://127.0.0.1:5001/login";
@@ -157,18 +160,11 @@ let CURRENT_JOB_ID = null;
 let POLL_TIMER = null;
 let POLLING_PAUSED = false;
 
-
 /* 🔐 LOGIN */
 function doLogin(){
-
-  const id = document.getElementById("loginId").value;
-  const pass = document.getElementById("loginPassword").value;
-
   fetch(LOGIN_API,{
       method:"POST",
-      headers:{
-          "Content-Type":"application/json"
-      },
+      headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
           login_id: document.getElementById("loginId").value,
           password: document.getElementById("loginPassword").value
@@ -176,7 +172,6 @@ function doLogin(){
   })
   .then(async r=>{
       const data = await r.json();
-  
       if(!r.ok){
           throw new Error(data.message || "Login failed");
       }
@@ -185,7 +180,7 @@ function doLogin(){
   .then(d=>{
       if(d.status==="success"){
           document.getElementById("loginPage").style.display="none";
-          document.getElementById("gstrPage").style.display="block";
+          document.getElementById("indexPage").style.display="block";
       } else {
           alert("Invalid credentials");
       }
@@ -193,9 +188,13 @@ function doLogin(){
   .catch(e=>{
       alert("Server Error: "+e.message);
   });
-
 }
 
+/* INDEX NAVIGATION */
+function openGSTRPage(){
+  document.getElementById("indexPage").style.display="none";
+  document.getElementById("gstrPage").style.display="block";
+}
 
 /* INIT FY & MONTH */
 const fy = document.getElementById("fy");
@@ -211,7 +210,6 @@ for (let i=2017;i<=y;i++) {
 }
 months.forEach(m=>month.add(new Option(m,m)));
 fullYear.onchange=e=>month.disabled=e.target.checked;
-
 
 /* UI HELPERS */
 function renderMonths(list){
@@ -233,11 +231,9 @@ function showModal(t,m){
 }
 function closeModal(){ jobModal.style.display="none"; }
 
-
 /* CAPTCHA */
 function showCaptcha(jobId){
   if (captchaModal.style.display === "block") return;
-
   POLLING_PAUSED = true;
   captchaText.value = "";
   captchaModal.style.display = "block";
@@ -264,7 +260,6 @@ captchaSubmitBtn.onclick = () => {
   });
 };
 
-
 /* DOWNLOAD */
 async function autoDownload(url){
   const r=await fetch(url);
@@ -275,7 +270,6 @@ async function autoDownload(url){
   a.click();
 }
 
-
 /* POLLING */
 function poll(jobId){
   POLL_TIMER = setInterval(()=>{
@@ -284,7 +278,6 @@ function poll(jobId){
     fetch(`${API_BASE}/job-status/${jobId}`)
     .then(r=>r.json())
     .then(d=>{
-
       if (d.status==="WAITING_FOR_CAPTCHA"){
         showCaptcha(jobId);
         return;
@@ -307,7 +300,6 @@ function poll(jobId){
     });
   },4000);
 }
-
 
 /* RUN */
 runBtn.onclick=()=>{
@@ -338,7 +330,3 @@ runBtn.onclick=()=>{
 
 </body>
 </html>
-
-
-
-
