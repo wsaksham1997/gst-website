@@ -71,7 +71,10 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import StaleElementReferenceException, NoSuchElementException, TimeoutException
+from flask_cors import CORS
 
+app = Flask(__name__)
+CORS(app, origins=["https://wsaksham1997.github.io"])
 
 def capture_captcha_image(driver, job_id, fy_folder: Path):
     try:
@@ -987,4 +990,5 @@ if __name__ == "__main__":
         app.run(
             host="0.0.0.0",
             port=5000,
+
         )
