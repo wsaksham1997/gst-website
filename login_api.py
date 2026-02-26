@@ -4,7 +4,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["https://wsaksham1997.github.io"])
 
 # ---------------- GOOGLE SHEET CONNECT ---------------- #
 def connect_sheet():
@@ -71,5 +71,6 @@ def login():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001)
+
 
 
