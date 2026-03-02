@@ -98,6 +98,7 @@ button {
 <div id="indexPage" class="container" style="display:none;">
 <h2 style="text-align:center;">GST Software - AKGVG</h2>
 <button onclick="openGSTRPage()">Download GSTR 2B</button>
+<button onclick="openGSTR2APage()">GSTR 2A Downloader</button>
 </div>
 
 <!-- 🟢 GST PAGE (Hidden until login success) -->
@@ -204,6 +205,13 @@ function doLogin(){
 function openGSTRPage(){
   document.getElementById("indexPage").style.display="none";
   document.getElementById("gstrPage").style.display="block";
+}
+function openGSTR2APage(){
+  fetch("http://127.0.0.1:5002/start",{
+    method:"GET"
+  })
+  .then(()=>alert("GSTR 2A Automation Started"))
+  .catch(()=>alert("Unable to start GSTR 2A"));
 }
 
 /* INIT FY & MONTH */
@@ -342,3 +350,4 @@ runBtn.onclick=()=>{
 
 </body>
 </html>
+
