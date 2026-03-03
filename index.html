@@ -311,7 +311,7 @@ function poll(jobId){
   POLL_TIMER = setInterval(()=>{
     if (POLLING_PAUSED) return;
 
-    fetch(`${API_BASE}/job-status/${jobId}`)
+    fetch(`${API_2A}/job-status-2a/${jobId}`)
     .then(r=>r.json())
     .then(d=>{
 
@@ -367,4 +367,5 @@ runBtn.onclick=()=>{
 
 </body>
 </html>
+
 
