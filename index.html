@@ -163,6 +163,8 @@ const API_2A = "http://127.0.0.1:5002";
 let CURRENT_JOB_ID = null;
 let POLL_TIMER = null;
 let POLLING_PAUSED = false;
+let CURRENT_MODE = null;
+let CURRENT_API = null;
 
 /* 🔐 LOGIN */
 function doLogin(){
@@ -204,31 +206,18 @@ function doLogin(){
 }
 
 function openGSTRPage(){
+  CURRENT_MODE = "2B";
+  CURRENT_API = API_BASE;
+
   document.getElementById("indexPage").style.display="none";
   document.getElementById("gstrPage").style.display="block";
 }
 function openGSTR2APage(){
-  fetch("http://127.0.0.1:5002/run-gstr2a",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
-    body:JSON.stringify({
-      gstin:"",
-      password:"",
-      fy:"",
-      only_fy:false,
-      month:"",
-      path:"",
-      client:"DEFAULT"
-    })
-  })
-  .then(r=>{
-    if(!r.ok) throw new Error();
-    return r.json();
-  })
-  .then(()=>alert("GSTR 2A Automation Started"))
-  .catch(()=>alert("Unable to start GSTR 2A"));
+  CURRENT_MODE = "2A";
+  CURRENT_API = API_2A;
+
+  document.getElementById("indexPage").style.display="none";
+  document.getElementById("gstrPage").style.display="block";
 }
 
 /* INIT FY & MONTH */
@@ -276,7 +265,7 @@ function showCaptcha(jobId){
 
   setTimeout(() => {
     captchaImg.src =
-      `${API_BASE}/captcha/${jobId}?t=${Date.now()}&r=${Math.random()}`;
+      `${CURRENT_API}/captcha/${jobId}?t=${Date.now()}&r=${Math.random()}`;
   }, 100);
 }
 
@@ -284,7 +273,7 @@ captchaSubmitBtn.onclick = () => {
   const text = captchaText.value.trim();
   if (!text) return alert("Enter captcha");
 
-  fetch(`${API_BASE}/submit-captcha/${CURRENT_JOB_ID}`,{
+  fetch(`${CURRENT_API}/submit-captcha/${CURRENT_JOB_ID}`,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({captcha:text})
@@ -311,7 +300,7 @@ function poll(jobId){
   POLL_TIMER = setInterval(()=>{
     if (POLLING_PAUSED) return;
 
-    fetch(`${API_2A}/job-status-2a/${jobId}`)
+    fetch(`${CURRENT_API}/job-status-${CURRENT_MODE.toLowerCase()}/${jobId}`)
     .then(r=>r.json())
     .then(d=>{
 
@@ -339,26 +328,40 @@ function poll(jobId){
 }
 
 /* RUN */
-runBtn.onclick=()=>{
-  const all=fullYear.checked;
-  renderMonths(all?months:[month.value]);
+runBtn.onclick = () => {
 
-  fetch(`${API_BASE}/run-gstr2b`,{
+  if (!CURRENT_MODE) {
+    alert("Please select 2A or 2B from index page.");
+    return;
+  }
+
+  const all = fullYear.checked;
+  renderMonths(all ? months : [month.value]);
+
+  let runUrl = "";
+
+  if (CURRENT_MODE === "2B") {
+    runUrl = `${API_BASE}/run-gstr2b`;
+  } else {
+    runUrl = `${API_2A}/run-gstr2a`;
+  }
+
+  fetch(runUrl,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
-      gstin:gstid.value,
-      password:password.value,
-      fy:fy.value,
-      only_fy:all,
-      month:all?"":month.value,
-      path:path.value,
+      gstin: gstid.value,
+      password: password.value,
+      fy: fy.value,
+      only_fy: all,
+      month: all ? "" : month.value,
+      path: path.value,
       client:"DEFAULT"
     })
   })
   .then(r=>r.json())
   .then(d=>{
-    CURRENT_JOB_ID=d.job_id;
+    CURRENT_JOB_ID = d.job_id;
     showModal("Started",`Job ID: ${d.job_id}`);
     poll(d.job_id);
   });
@@ -367,5 +370,3 @@ runBtn.onclick=()=>{
 
 </body>
 </html>
-
-
