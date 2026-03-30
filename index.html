@@ -79,7 +79,6 @@ button {
 
 <body>
 
-<!-- 🔐 LOGIN PAGE -->
 <div id="loginPage" class="container">
 <h2>Software Login</h2>
 
@@ -94,14 +93,12 @@ button {
 <p id="loginError" style="color:red;"></p>
 </div>
 
-<!-- 🟡 INDEX PAGE -->
 <div id="indexPage" class="container" style="display:none;">
 <h2 style="text-align:center;">GST Software - AKGVG</h2>
 <button onclick="openGSTRPage()">Download GSTR 2B</button>
 <button onclick="openGSTR2APage()">GSTR 2A Downloader</button>
 </div>
 
-<!-- 🟢 GST PAGE (Hidden until login success) -->
 <div id="gstrPage" style="display:none;">
 
 <div class="container">
@@ -135,7 +132,6 @@ button {
 </div>
 
 
-<!-- STATUS MODAL -->
 <div id="jobModal" class="modal">
   <div class="modal-content">
     <h3 id="modalTitle"></h3>
@@ -144,7 +140,6 @@ button {
   </div>
 </div>
 
-<!-- CAPTCHA MODAL -->
 <div id="captchaModal" class="modal">
   <div class="modal-content">
     <h3>Enter CAPTCHA</h3>
@@ -291,8 +286,10 @@ async function autoDownload(url){
   const b=await r.blob();
   const a=document.createElement("a");
   a.href=URL.createObjectURL(b);
-  a.download="GST_2B.zip";
+  a.download=`GSTR_${CURRENT_MODE}_Download.zip`;
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
 }
 
 /* POLLING */
@@ -300,7 +297,8 @@ function poll(jobId){
   POLL_TIMER = setInterval(()=>{
     if (POLLING_PAUSED) return;
 
-    fetch(`${CURRENT_API}/job-status-${CURRENT_MODE.toLowerCase()}/${jobId}`)
+    const statusRoute = (CURRENT_MODE === "2A") ? "job-status-2a" : "job-status";
+    fetch(`${CURRENT_API}/${statusRoute}/${jobId}`)
     .then(r=>r.json())
     .then(d=>{
 
@@ -321,7 +319,7 @@ function poll(jobId){
       if(d.status==="COMPLETED"){
         clearInterval(POLL_TIMER);
         showModal("Completed","Download will start automatically");
-        autoDownload(API_BASE + d.download_url);
+        autoDownload(CURRENT_API + d.download_url);
       }
     });
   },4000);
