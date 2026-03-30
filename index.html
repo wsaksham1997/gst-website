@@ -6,74 +6,74 @@
 
 <style>
 body {
-  font-family: Arial, sans-serif;
-  background: #f5f7fb;
-  padding: 30px;
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+  padding: 30px;
 }
 
 .container {
-  max-width: 700px;
-  margin: auto;
-  background: white;
-  padding: 25px;
-  border-radius: 8px;
+  max-width: 700px;
+  margin: auto;
+  background: white;
+  padding: 25px;
+  border-radius: 8px;
 }
 
 label { display:block; margin-top:12px; font-weight:bold; }
 input, select {
-  width:100%;
-  padding:8px;
-  margin-top:5px;
+  width:100%;
+  padding:8px;
+  margin-top:5px;
 }
 
 #monthProgress {
-  display:grid;
-  grid-template-columns:repeat(6,1fr);
-  gap:8px;
-  margin-top:10px;
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:8px;
+  margin-top:10px;
 }
 
 .month-box {
-  padding:8px;
-  text-align:center;
-  border-radius:6px;
-  background:#ddd;
+  padding:8px;
+  text-align:center;
+  border-radius:6px;
+  background:#ddd;
 }
 .month-running { background:#90caf9; }
-.month-generating { background:#ffd54f; }
+.month-generating { background:#ffd54f; color:black; }
 .month-done { background:#81c784; color:white; }
 .month-failed { background:#e57373; color:white; }
 
 button {
-  margin-top:15px;
-  padding:10px;
-  cursor:pointer;
+  margin-top:15px;
+  padding:10px;
+  cursor:pointer;
 }
 
 .modal {
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.5);
-  z-index:9999;
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.5);
+  z-index:9999;
 }
 
 .modal-content {
-  background:white;
-  width:420px;
-  margin:10% auto;
-  padding:20px;
-  border-radius:8px;
-  text-align:center;
+  background:white;
+  width:420px;
+  margin:10% auto;
+  padding:20px;
+  border-radius:8px;
+  text-align:center;
 }
 
 #captchaImg {
-  display:block;
-  width:260px;
-  height:auto;
-  margin:15px auto;
-  border:1px solid #ccc;
-  background:#f0f0f0;
+  display:block;
+  width:260px;
+  height:auto;
+  margin:15px auto;
+  border:1px solid #ccc;
+  background:#f0f0f0;
 }
 </style>
 </head>
@@ -121,7 +121,7 @@ button {
 <select id="month"></select>
 
 <label>
-  <input type="checkbox" id="fullYear"> Entire FY
+  <input type="checkbox" id="fullYear"> Entire FY
 </label>
 
 <label>Progress</label>
@@ -134,20 +134,20 @@ button {
 
 
 <div id="jobModal" class="modal">
-  <div class="modal-content">
-    <h3 id="modalTitle"></h3>
-    <pre id="modalMessage"></pre>
-    <button onclick="closeModal()">Close</button>
-  </div>
+  <div class="modal-content">
+    <h3 id="modalTitle"></h3>
+    <pre id="modalMessage"></pre>
+    <button onclick="closeModal()">Close</button>
+  </div>
 </div>
 
 <div id="captchaModal" class="modal">
-  <div class="modal-content">
-    <h3>Enter CAPTCHA</h3>
-    <img id="captchaImg">
-    <input id="captchaText" placeholder="Enter captcha">
-    <button id="captchaSubmitBtn">Submit Captcha</button>
-  </div>
+  <div class="modal-content">
+    <h3>Enter CAPTCHA</h3>
+    <img id="captchaImg">
+    <input id="captchaText" placeholder="Enter captcha">
+    <button id="captchaSubmitBtn">Submit Captcha</button>
+  </div>
 </div>
 
 
@@ -165,55 +165,55 @@ let CURRENT_API = null;
 /* 🔐 LOGIN */
 function doLogin(){
 
-  const id = document.getElementById("loginId").value;
-  const pass = document.getElementById("loginPassword").value;
+  const id = document.getElementById("loginId").value;
+  const pass = document.getElementById("loginPassword").value;
 
-  fetch(LOGIN_API,{
-      method:"POST",
-      headers:{
-          "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-          login_id: document.getElementById("loginId").value,
-          password: document.getElementById("loginPassword").value
-      })
-  })
-  .then(async r=>{
-      const data = await r.json();
-  
-      if(!r.ok){
-          throw new Error(data.message || "Login failed");
-      }
-      return data;
-  })
-  .then(d=>{
-      if(d.status==="success"){
-          document.getElementById("loginPage").style.display="none";
-          document.getElementById("indexPage").style.display="block";
-          document.getElementById("gstrPage").style.display="none";
-      } else {
-          alert("Invalid credentials");
-      }
-  })
-  .catch(e=>{
-      alert("Server Error: "+e.message);
-  });
+  fetch(LOGIN_API,{
+      method:"POST",
+      headers:{
+          "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+          login_id: document.getElementById("loginId").value,
+          password: document.getElementById("loginPassword").value
+      })
+  })
+  .then(async r=>{
+      const data = await r.json();
+  
+      if(!r.ok){
+          throw new Error(data.message || "Login failed");
+      }
+      return data;
+  })
+  .then(d=>{
+      if(d.status==="success"){
+          document.getElementById("loginPage").style.display="none";
+          document.getElementById("indexPage").style.display="block";
+          document.getElementById("gstrPage").style.display="none";
+      } else {
+          alert("Invalid credentials");
+      }
+  })
+  .catch(e=>{
+      alert("Server Error: "+e.message);
+  });
 
 }
 
 function openGSTRPage(){
-  CURRENT_MODE = "2B";
-  CURRENT_API = API_BASE;
+  CURRENT_MODE = "2B";
+  CURRENT_API = API_BASE;
 
-  document.getElementById("indexPage").style.display="none";
-  document.getElementById("gstrPage").style.display="block";
+  document.getElementById("indexPage").style.display="none";
+  document.getElementById("gstrPage").style.display="block";
 }
 function openGSTR2APage(){
-  CURRENT_MODE = "2A";
-  CURRENT_API = API_2A;
+  CURRENT_MODE = "2A";
+  CURRENT_API = API_2A;
 
-  document.getElementById("indexPage").style.display="none";
-  document.getElementById("gstrPage").style.display="block";
+  document.getElementById("indexPage").style.display="none";
+  document.getElementById("gstrPage").style.display="block";
 }
 
 /* INIT FY & MONTH */
@@ -226,145 +226,145 @@ const months = ["April","May","June","July","August","September",
 
 const y = new Date().getFullYear();
 for (let i=2017;i<=y;i++) {
-  fy.add(new Option(`${i}-${String(i+1).slice(-2)}`,`${i}-${String(i+1).slice(-2)}`));
+  fy.add(new Option(`${i}-${String(i+1).slice(-2)}`,`${i}-${String(i+1).slice(-2)}`));
 }
 months.forEach(m=>month.add(new Option(m,m)));
 fullYear.onchange=e=>month.disabled=e.target.checked;
 
 /* UI HELPERS */
 function renderMonths(list){
-  const box=document.getElementById("monthProgress");
-  box.innerHTML="";
-  list.forEach(m=>{
-    const d=document.createElement("div");
-    d.id="m-"+m;
-    d.className="month-box";
-    d.innerText=m;
-    box.appendChild(d);
-  });
+  const box=document.getElementById("monthProgress");
+  box.innerHTML="";
+  list.forEach(m=>{
+    const d=document.createElement("div");
+    d.id="m-"+m;
+    d.className="month-box";
+    d.innerText=m;
+    box.appendChild(d);
+  });
 }
 
 function showModal(t,m){
-  modalTitle.innerText=t;
-  modalMessage.innerText=m;
-  jobModal.style.display="block";
+  modalTitle.innerText=t;
+  modalMessage.innerText=m;
+  jobModal.style.display="block";
 }
 function closeModal(){ jobModal.style.display="none"; }
 
 /* CAPTCHA */
 function showCaptcha(jobId){
-  if (captchaModal.style.display === "block") return;
+  if (captchaModal.style.display === "block") return;
 
-  POLLING_PAUSED = true;
-  captchaText.value = "";
-  captchaModal.style.display = "block";
+  POLLING_PAUSED = true;
+  captchaText.value = "";
+  captchaModal.style.display = "block";
 
-  setTimeout(() => {
-    captchaImg.src =
-      `${CURRENT_API}/captcha/${jobId}?t=${Date.now()}&r=${Math.random()}`;
-  }, 100);
+  setTimeout(() => {
+    captchaImg.src =
+      `${CURRENT_API}/captcha/${jobId}?t=${Date.now()}&r=${Math.random()}`;
+  }, 100);
 }
 
 captchaSubmitBtn.onclick = () => {
-  const text = captchaText.value.trim();
-  if (!text) return alert("Enter captcha");
+  const text = captchaText.value.trim();
+  if (!text) return alert("Enter captcha");
 
-  fetch(`${CURRENT_API}/submit-captcha/${CURRENT_JOB_ID}`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({captcha:text})
-  })
-  .then(()=>{
-    captchaModal.style.display="none";
-    captchaImg.src = "";
-    POLLING_PAUSED = false;
-  });
+  fetch(`${CURRENT_API}/submit-captcha/${CURRENT_JOB_ID}`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({captcha:text})
+  })
+  .then(()=>{
+    captchaModal.style.display="none";
+    captchaImg.src = "";
+    POLLING_PAUSED = false;
+  });
 };
 
 /* DOWNLOAD */
 async function autoDownload(url){
-  const r=await fetch(url);
-  const b=await r.blob();
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(b);
-  a.download=`GSTR_${CURRENT_MODE}_Download.zip`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  const r=await fetch(url);
+  const b=await r.blob();
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(b);
+  a.download=`GSTR_${CURRENT_MODE}_Download.zip`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 /* POLLING */
 function poll(jobId){
-  POLL_TIMER = setInterval(()=>{
-    if (POLLING_PAUSED) return;
+  POLL_TIMER = setInterval(()=>{
+    if (POLLING_PAUSED) return;
 
-    const statusRoute = (CURRENT_MODE === "2A") ? "job-status-2a" : "job-status";
-    fetch(`${CURRENT_API}/${statusRoute}/${jobId}`)
-    .then(r=>r.json())
-    .then(d=>{
+    const statusRoute = (CURRENT_MODE === "2A") ? "job-status-2a" : "job-status";
+    fetch(`${CURRENT_API}/${statusRoute}/${jobId}`)
+    .then(r=>r.json())
+    .then(d=>{
 
-      if (d.status==="WAITING_FOR_CAPTCHA"){
-        showCaptcha(jobId);
-        return;
-      }
+      if (d.status==="WAITING_FOR_CAPTCHA"){
+        showCaptcha(jobId);
+        return;
+      }
 
-      Object.entries(d.months||{}).forEach(([m,s])=>{
-        const el=document.getElementById("m-"+m);
-        if(!el)return;
-        el.className="month-box "+
-          (s==="RUNNING"?"month-running":
+      Object.entries(d.months||{}).forEach(([m,s])=>{
+        const el=document.getElementById("m-"+m);
+        if(!el)return;
+        el.className="month-box "+
+          (s==="RUNNING"?"month-running":
            s==="GENERATING"?"month-generating":
-           s==="COMPLETED"?"month-done":
-           s==="FAILED"?"month-failed":"");
-      });
+           s==="COMPLETED"?"month-done":
+           s==="FAILED"?"month-failed":"");
+      });
 
-      if(d.status==="COMPLETED"){
-        clearInterval(POLL_TIMER);
-        showModal("Completed","Download will start automatically");
-        autoDownload(CURRENT_API + d.download_url);
-      }
-    });
-  },4000);
+      if(d.status==="COMPLETED"){
+        clearInterval(POLL_TIMER);
+        showModal("Completed","Download will start automatically");
+        autoDownload(CURRENT_API + d.download_url);
+      }
+    });
+  },4000);
 }
 
 /* RUN */
 runBtn.onclick = () => {
 
-  if (!CURRENT_MODE) {
-    alert("Please select 2A or 2B from index page.");
-    return;
-  }
+  if (!CURRENT_MODE) {
+    alert("Please select 2A or 2B from index page.");
+    return;
+  }
 
-  const all = fullYear.checked;
-  renderMonths(all ? months : [month.value]);
+  const all = fullYear.checked;
+  renderMonths(all ? months : [month.value]);
 
-  let runUrl = "";
+  let runUrl = "";
 
-  if (CURRENT_MODE === "2B") {
-    runUrl = `${API_BASE}/run-gstr2b`;
-  } else {
-    runUrl = `${API_2A}/run-gstr2a`;
-  }
+  if (CURRENT_MODE === "2B") {
+    runUrl = `${API_BASE}/run-gstr2b`;
+  } else {
+    runUrl = `${API_2A}/run-gstr2a`;
+  }
 
-  fetch(runUrl,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      gstin: gstid.value,
-      password: password.value,
-      fy: fy.value,
-      only_fy: all,
-      month: all ? "" : month.value,
-      path: path.value,
-      client:"DEFAULT"
-    })
-  })
-  .then(r=>r.json())
-  .then(d=>{
-    CURRENT_JOB_ID = d.job_id;
-    showModal("Started",`Job ID: ${d.job_id}`);
-    poll(d.job_id);
-  });
+  fetch(runUrl,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      gstin: gstid.value,
+      password: password.value,
+      fy: fy.value,
+      only_fy: all,
+      month: all ? "" : month.value,
+      path: path.value,
+      client:"DEFAULT"
+    })
+  })
+  .then(r=>r.json())
+  .then(d=>{
+    CURRENT_JOB_ID = d.job_id;
+    showModal("Started",`Job ID: ${d.job_id}`);
+    poll(d.job_id);
+  });
 };
 </script>
 
