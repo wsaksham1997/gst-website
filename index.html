@@ -50,6 +50,13 @@ button {
   cursor:pointer;
 }
 
+/* Added a small style tweak for the button layout in the modal */
+.modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
 .modal {
   display:none;
   position:fixed;
@@ -146,7 +153,10 @@ button {
     <h3>Enter CAPTCHA</h3>
     <img id="captchaImg">
     <input id="captchaText" placeholder="Enter captcha">
-    <button id="captchaSubmitBtn">Submit Captcha</button>
+    <div class="modal-buttons">
+      <button id="captchaSubmitBtn">Submit Captcha</button>
+      <button id="captchaRefreshBtn" onclick="refreshCaptcha()">🔄 Refresh</button>
+    </div>
   </div>
 </div>
 
@@ -264,6 +274,40 @@ function showCaptcha(jobId){
       `${CURRENT_API}/captcha/${jobId}?t=${Date.now()}&r=${Math.random()}`;
   }, 100);
 }
+
+/* --- ADDED: Refresh Captcha Function --- */
+function refreshCaptcha() {
+  if (!CURRENT_JOB_ID) return;
+  
+  // Disable the button temporarily so users don't spam it
+  const refreshBtn = document.getElementById("captchaRefreshBtn");
+  refreshBtn.disabled = true;
+  refreshBtn.innerText = "Refreshing...";
+
+  fetch(`${CURRENT_API}/refresh-captcha/${CURRENT_JOB_ID}`, {
+    method: "POST"
+  })
+  .then(r => r.json())
+  .then(d => {
+    if(d.status === "CAPTCHA_REFRESHED") {
+      // Reload the image with new cache-busting parameters
+      captchaImg.src = `${CURRENT_API}/captcha/${CURRENT_JOB_ID}?t=${Date.now()}&r=${Math.random()}`;
+      captchaText.value = ""; 
+    } else {
+      alert("Failed to refresh captcha: " + (d.error || "Unknown error"));
+    }
+  })
+  .catch(e => {
+    console.error("Error refreshing captcha:", e);
+    alert("Server error while refreshing captcha.");
+  })
+  .finally(() => {
+    // Re-enable the button
+    refreshBtn.disabled = false;
+    refreshBtn.innerText = "🔄 Refresh";
+  });
+}
+/* --------------------------------------- */
 
 captchaSubmitBtn.onclick = () => {
   const text = captchaText.value.trim();
