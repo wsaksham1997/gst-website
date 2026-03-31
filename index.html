@@ -74,6 +74,15 @@ button {
   text-align:center;
 }
 
+/* Make sure the text inside the modal wraps properly if errors are long */
+#modalMessage {
+  white-space: pre-wrap; 
+  word-wrap: break-word;
+  font-family: Arial, sans-serif;
+  color: #d32f2f; /* Make the error text stand out */
+  font-weight: bold;
+}
+
 #captchaImg {
   display:block;
   width:260px;
@@ -256,6 +265,7 @@ function renderMonths(list){
 
 function showModal(t,m){
   modalTitle.innerText=t;
+  modalMessage.style.color = t.includes("Failed") || t.includes("Error") ? "#d32f2f" : "#333";
   modalMessage.innerText=m;
   jobModal.style.display="block";
 }
@@ -352,6 +362,16 @@ function poll(jobId){
         return;
       }
 
+      /* --- NEW: CHECK FOR FATAL FAILURES LIKE WRONG PASSWORDS --- */
+      if (d.status==="FAILED"){
+        clearInterval(POLL_TIMER);
+        document.getElementById("captchaModal").style.display="none"; 
+        POLLING_PAUSED = false;
+        showModal("Authentication Failed", d.error || "An unknown error occurred.");
+        return;
+      }
+      /* --------------------------------------------------------- */
+
       Object.entries(d.months||{}).forEach(([m,s])=>{
         const el=document.getElementById("m-"+m);
         if(!el)return;
@@ -359,7 +379,7 @@ function poll(jobId){
           (s==="RUNNING"?"month-running":
            s==="GENERATING"?"month-generating":
            s==="COMPLETED"?"month-done":
-           s==="FAILED"?"month-failed":"");
+           s==="FAILED" || s==="FAILED_AGAIN"?"month-failed":"");
       });
 
       if(d.status==="COMPLETED"){
