@@ -24,6 +24,7 @@ input, select {
   width:100%;
   padding:8px;
   margin-top:5px;
+  box-sizing: border-box;
 }
 
 #monthProgress {
@@ -43,6 +44,7 @@ input, select {
 .month-generating { background:#ffd54f; color:black; }
 .month-done { background:#81c784; color:white; }
 .month-failed { background:#e57373; color:white; }
+.month-nil { background:#ffa726; color:black; } /* ADDED: ORANGE FOR NIL RETURN */
 
 button {
   margin-top:15px;
@@ -50,11 +52,11 @@ button {
   cursor:pointer;
 }
 
-/* Added a small style tweak for the button layout in the modal */
 .modal-buttons {
   display: flex;
   justify-content: center;
   gap: 10px;
+  margin-top: 15px;
 }
 
 .modal {
@@ -74,12 +76,10 @@ button {
   text-align:center;
 }
 
-/* Make sure the text inside the modal wraps properly if errors are long */
 #modalMessage {
   white-space: pre-wrap; 
   word-wrap: break-word;
   font-family: Arial, sans-serif;
-  color: #d32f2f; /* Make the error text stand out */
   font-weight: bold;
 }
 
@@ -121,6 +121,9 @@ button {
 <div class="container">
 <h2>GST Portal Download</h2>
 
+<label>Client Name</label>
+<input id="clientName" placeholder="e.g., Cesta" value="DEFAULT">
+
 <label>GSTIN</label>
 <input id="gstid">
 
@@ -153,7 +156,10 @@ button {
   <div class="modal-content">
     <h3 id="modalTitle"></h3>
     <pre id="modalMessage"></pre>
-    <button onclick="closeModal()">Close</button>
+    <div class="modal-buttons">
+      <button id="resumeBtn" style="display:none; background:#1976d2; color:white; border:none; border-radius:4px;" onclick="resumeJob()">Press to continue Downloading</button>
+      <button onclick="closeModal()">Close</button>
+    </div>
   </div>
 </div>
 
@@ -181,6 +187,8 @@ let POLLING_PAUSED = false;
 let CURRENT_MODE = null;
 let CURRENT_API = null;
 
+const NETWORK_ERROR_MSG = "Unable to communicate with the automation server. Please verify your network connection and ensure the server is running, then try again.";
+
 /* 🔐 LOGIN */
 function doLogin(){
 
@@ -199,7 +207,6 @@ function doLogin(){
   })
   .then(async r=>{
       const data = await r.json();
-  
       if(!r.ok){
           throw new Error(data.message || "Login failed");
       }
@@ -215,7 +222,7 @@ function doLogin(){
       }
   })
   .catch(e=>{
-      alert("Server Error: "+e.message);
+      alert("Connection Error: " + NETWORK_ERROR_MSG);
   });
 
 }
@@ -223,14 +230,12 @@ function doLogin(){
 function openGSTRPage(){
   CURRENT_MODE = "2B";
   CURRENT_API = API_BASE;
-
   document.getElementById("indexPage").style.display="none";
   document.getElementById("gstrPage").style.display="block";
 }
 function openGSTR2APage(){
   CURRENT_MODE = "2A";
   CURRENT_API = API_2A;
-
   document.getElementById("indexPage").style.display="none";
   document.getElementById("gstrPage").style.display="block";
 }
@@ -265,7 +270,7 @@ function renderMonths(list){
 
 function showModal(t,m){
   modalTitle.innerText=t;
-  modalMessage.style.color = t.includes("Failed") || t.includes("Error") ? "#d32f2f" : "#333";
+  modalMessage.style.color = t.includes("Failed") || t.includes("Error") || t.includes("Lost") ? "#d32f2f" : "#333";
   modalMessage.innerText=m;
   jobModal.style.display="block";
 }
@@ -285,11 +290,9 @@ function showCaptcha(jobId){
   }, 100);
 }
 
-/* --- ADDED: Refresh Captcha Function --- */
 function refreshCaptcha() {
   if (!CURRENT_JOB_ID) return;
   
-  // Disable the button temporarily so users don't spam it
   const refreshBtn = document.getElementById("captchaRefreshBtn");
   refreshBtn.disabled = true;
   refreshBtn.innerText = "Refreshing...";
@@ -300,7 +303,6 @@ function refreshCaptcha() {
   .then(r => r.json())
   .then(d => {
     if(d.status === "CAPTCHA_REFRESHED") {
-      // Reload the image with new cache-busting parameters
       captchaImg.src = `${CURRENT_API}/captcha/${CURRENT_JOB_ID}?t=${Date.now()}&r=${Math.random()}`;
       captchaText.value = ""; 
     } else {
@@ -309,15 +311,13 @@ function refreshCaptcha() {
   })
   .catch(e => {
     console.error("Error refreshing captcha:", e);
-    alert("Server error while refreshing captcha.");
+    alert("Connection Error: " + NETWORK_ERROR_MSG);
   })
   .finally(() => {
-    // Re-enable the button
     refreshBtn.disabled = false;
     refreshBtn.innerText = "🔄 Refresh";
   });
 }
-/* --------------------------------------- */
 
 captchaSubmitBtn.onclick = () => {
   const text = captchaText.value.trim();
@@ -332,19 +332,26 @@ captchaSubmitBtn.onclick = () => {
     captchaModal.style.display="none";
     captchaImg.src = "";
     POLLING_PAUSED = false;
+  })
+  .catch(e => {
+    alert("Connection Error: " + NETWORK_ERROR_MSG);
   });
 };
 
 /* DOWNLOAD */
 async function autoDownload(url){
-  const r=await fetch(url);
-  const b=await r.blob();
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(b);
-  a.download=`GSTR_${CURRENT_MODE}_Download.zip`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  try {
+    const r=await fetch(url);
+    const b=await r.blob();
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(b);
+    a.download=`GSTR_${CURRENT_MODE}_Download.zip`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch (e) {
+    showModal("Download Failed", "The file is ready, but we lost connection to the server. Please check your network and try again.");
+  }
 }
 
 /* POLLING */
@@ -362,15 +369,15 @@ function poll(jobId){
         return;
       }
 
-      /* --- NEW: CHECK FOR FATAL FAILURES LIKE WRONG PASSWORDS --- */
+      /* FATAL FAILURES & ZOMBIE FILE ERRORS */
       if (d.status==="FAILED"){
         clearInterval(POLL_TIMER);
         document.getElementById("captchaModal").style.display="none"; 
         POLLING_PAUSED = false;
-        showModal("Authentication Failed", d.error || "An unknown error occurred.");
+        showModal("Authentication / Server Error", d.error || "An unknown error occurred.");
+        document.getElementById("resumeBtn").style.display = "inline-block";
         return;
       }
-      /* --------------------------------------------------------- */
 
       Object.entries(d.months||{}).forEach(([m,s])=>{
         const el=document.getElementById("m-"+m);
@@ -379,21 +386,40 @@ function poll(jobId){
           (s==="RUNNING"?"month-running":
            s==="GENERATING"?"month-generating":
            s==="COMPLETED"?"month-done":
+           s==="NIL_RETURN"?"month-nil": 
            s==="FAILED" || s==="FAILED_AGAIN"?"month-failed":"");
       });
 
       if(d.status==="COMPLETED"){
         clearInterval(POLL_TIMER);
-        showModal("Completed","Download will start automatically");
+        
+        let msg = "Download will start automatically.";
+        let nilMonths = [];
+        Object.entries(d.months||{}).forEach(([m, s]) => {
+            if (s === "NIL_RETURN") nilMonths.push(m);
+        });
+        if (nilMonths.length > 0) {
+            msg += "\n\nNote: The following months had no data (Nil Returns): " + nilMonths.join(", ");
+        }
+
+        showModal("Completed", msg);
+        document.getElementById("resumeBtn").style.display = "none";
         autoDownload(CURRENT_API + d.download_url);
       }
+    })
+    .catch(e => {
+        // CATCH NETWORK DROPS DURING POLLING
+        clearInterval(POLL_TIMER);
+        document.getElementById("captchaModal").style.display="none"; 
+        POLLING_PAUSED = false;
+        showModal("Connection Lost", NETWORK_ERROR_MSG);
+        document.getElementById("resumeBtn").style.display = "inline-block"; 
     });
   },4000);
 }
 
-/* RUN */
-runBtn.onclick = () => {
-
+/* THE TRIGGER LOGIC */
+function triggerRun(isResume = false) {
   if (!CURRENT_MODE) {
     alert("Please select 2A or 2B from index page.");
     return;
@@ -402,13 +428,10 @@ runBtn.onclick = () => {
   const all = fullYear.checked;
   renderMonths(all ? months : [month.value]);
 
-  let runUrl = "";
-
-  if (CURRENT_MODE === "2B") {
-    runUrl = `${API_BASE}/run-gstr2b`;
-  } else {
-    runUrl = `${API_2A}/run-gstr2a`;
-  }
+  let runUrl = CURRENT_MODE === "2B" ? `${API_BASE}/run-gstr2b` : `${API_2A}/run-gstr2a`;
+  
+  // Get dynamic client name
+  const cName = document.getElementById("clientName").value.trim() || "DEFAULT";
 
   fetch(runUrl,{
     method:"POST",
@@ -420,16 +443,30 @@ runBtn.onclick = () => {
       only_fy: all,
       month: all ? "" : month.value,
       path: path.value,
-      client:"DEFAULT"
+      client: cName,
+      resume: isResume 
     })
   })
   .then(r=>r.json())
   .then(d=>{
     CURRENT_JOB_ID = d.job_id;
-    showModal("Started",`Job ID: ${d.job_id}`);
+    showModal(isResume ? "Resuming Job..." : "Started", `Job ID: ${d.job_id}`);
+    document.getElementById("resumeBtn").style.display = "none";
     poll(d.job_id);
+  })
+  .catch(e => {
+    showModal("Connection Error", NETWORK_ERROR_MSG);
+    document.getElementById("resumeBtn").style.display = "none";
   });
-};
+}
+
+runBtn.onclick = () => triggerRun(false);
+
+function resumeJob() {
+  closeModal();
+  triggerRun(true);
+}
+
 </script>
 
 </body>
